@@ -1,6 +1,8 @@
 gunicorn (17.5-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Refresh and alter structure of 0001-drop-supplemental-groups.patch. Thanks
+    to Randall Leeds.
 
  -- Chris Lamb <lamby@debian.org>  Thu, 04 Jul 2013 12:09:20 +0100
 
