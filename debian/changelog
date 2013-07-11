@@ -1,9 +1,9 @@
-gunicorn (17.5-2) UNRELEASED; urgency=low
+gunicorn (17.5-2) unstable; urgency=low
 
   * Ignore automatic backup files (eg. "filename~") in /etc/gunicorn.d. Thanks
     to Gael Le Mignot <gael@pilotsystems.net>. (Closes: #715032)
 
- -- Chris Lamb <lamby@debian.org>  Tue, 09 Jul 2013 14:50:44 +0100
+ -- Chris Lamb <lamby@debian.org>  Thu, 11 Jul 2013 20:05:04 +0100
 
 gunicorn (17.5-1) unstable; urgency=low
 
