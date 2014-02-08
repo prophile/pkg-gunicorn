@@ -16,8 +16,8 @@ index 9b7529f..6e4e69c 100644
  
 +import errno
  import fcntl
+ import io
  import os
- import pkg_resources
 @@ -147,6 +148,14 @@ def set_owner_process(uid, gid):
          # groups like on osx or fedora
          gid = abs(gid) & 0x7FFFFFFF
