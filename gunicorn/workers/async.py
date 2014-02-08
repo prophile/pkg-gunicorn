@@ -94,8 +94,11 @@ class AsyncWorker(base.Worker):
             if respiter == ALREADY_HANDLED:
                 return False
             try:
-                for item in respiter:
-                    resp.write(item)
+                if isinstance(respiter, environ['wsgi.file_wrapper']):
+                    resp.write_file(respiter)
+                else:
+                    for item in respiter:
+                        resp.write(item)
                 resp.close()
                 request_time = datetime.now() - request_start
                 self.log.access(resp, req, environ, request_time)
@@ -105,7 +108,7 @@ class AsyncWorker(base.Worker):
             if resp.should_close():
                 raise StopIteration()
         except Exception:
-            if resp.headers_sent:
+            if resp and resp.headers_sent:
                 # If the requests have already been sent, we should close the
                 # connection to indicate the error.
                 try:
@@ -113,7 +116,7 @@ class AsyncWorker(base.Worker):
                     sock.close()
                 except socket.error:
                     pass
-                return
+                raise StopIteration()
             raise
         finally:
             try:

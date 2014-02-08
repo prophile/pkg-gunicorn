@@ -26,6 +26,11 @@ class SyncWorker(base.Worker):
         for s in self.sockets:
             s.setblocking(0)
 
+        if not self.timeout:
+            # if no timeout is given the worker will never wait and will
+            # use the CPU for nothing. This minimal timeout prevent it.
+            self.timeout = 0.5
+
         ready = self.sockets
         while self.alive:
             self.notify()
@@ -139,7 +144,7 @@ class SyncWorker(base.Worker):
         except socket.error:
             raise
         except Exception as e:
-            if resp.headers_sent:
+            if resp and resp.headers_sent:
                 # If the requests have already been sent, we should close the
                 # connection to indicate the error.
                 try:
@@ -147,8 +152,7 @@ class SyncWorker(base.Worker):
                     client.close()
                 except socket.error:
                     pass
-
-                return
+                raise StopIteration()
             # Only send back traceback in HTTP in debug mode.
             self.handle_error(req, client, addr, e)
             return
