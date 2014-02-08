@@ -10,6 +10,7 @@ import sys
 
 from gunicorn.six import unquote_to_wsgi_str, string_types, binary_type, reraise
 from gunicorn import SERVER_SOFTWARE
+import gunicorn.six as six
 import gunicorn.util as util
 
 try:
@@ -17,7 +18,7 @@ try:
     from os import sendfile
 except ImportError:
     try:
-        from _sendfile import sendfile
+        from ._sendfile import sendfile
     except ImportError:
         sendfile = None
 
@@ -194,6 +195,8 @@ class Response(object):
             return True
         if self.response_length is not None or self.chunked:
             return False
+        if self.status_code < 200 or self.status_code in (204, 304):
+            return False
         return True
 
     def start_response(self, status, headers, exc_info=None):
@@ -207,6 +210,15 @@ class Response(object):
             raise AssertionError("Response headers already set!")
 
         self.status = status
+
+        # get the status code from the response here so we can use it to check
+        # the need for the connection header later without parsing the string
+        # each time.
+        try:
+            self.status_code = int(self.status.split()[0])
+        except ValueError:
+            self.status_code = None
+
         self.process_headers(headers)
         self.chunked = self.is_chunked()
         return self.write
@@ -240,7 +252,7 @@ class Response(object):
             return False
         elif self.req.version <= (1, 0):
             return False
-        elif self.status.startswith("304") or self.status.startswith("204"):
+        elif self.status_code in (204, 304):
             # Do not use chunked responses when the response is guaranteed to
             # not have a response body.
             return False
@@ -319,11 +331,13 @@ class Response(object):
                 sent += sendfile(sockno, fileno, offset + sent, nbytes - sent)
 
     def write_file(self, respiter):
-        if sendfile is not None and \
-                hasattr(respiter.filelike, 'fileno') and \
-                hasattr(respiter.filelike, 'tell'):
+        if sendfile is not None and util.is_fileobject(respiter.filelike):
+            # sometimes the fileno isn't a callable
+            if six.callable(respiter.filelike.fileno):
+                fileno = respiter.filelike.fileno()
+            else:
+                fileno = respiter.filelike.fileno
 
-            fileno = respiter.filelike.fileno()
             fd_offset = os.lseek(fileno, 0, os.SEEK_CUR)
             fo_offset = respiter.filelike.tell()
             nbytes = max(os.fstat(fileno).st_size - fo_offset, 0)
