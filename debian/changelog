@@ -1,9 +1,9 @@
-gunicorn (18.0-1) UNRELEASED; urgency=low
+gunicorn (18.0-1) unstable; urgency=low
 
   * New upstream release.
   * Update 0001-drop-supplemental-groups.
 
- -- Chris Lamb <lamby@debian.org>  Sat, 08 Feb 2014 17:25:26 +0000
+ -- Chris Lamb <lamby@debian.org>  Sat, 08 Feb 2014 17:28:58 +0000
 
 gunicorn (17.5-2) unstable; urgency=low
 
