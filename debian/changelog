@@ -1,3 +1,9 @@
+gunicorn (18.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 08 Feb 2014 17:25:26 +0000
+
 gunicorn (17.5-2) unstable; urgency=low
 
   * Ignore automatic backup files (eg. "filename~") in /etc/gunicorn.d. Thanks
