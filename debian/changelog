@@ -1,4 +1,4 @@
-gunicorn (18.0-1) UNRELEASED; urgency=medium
+gunicorn (18.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Update 0001-drop-supplemental-groups.
