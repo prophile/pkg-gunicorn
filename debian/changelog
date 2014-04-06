@@ -1,3 +1,10 @@
+gunicorn (18.0-2) UNRELEASED; urgency=low
+
+  * Avoid using $all in Required-Start so that other services can
+    Required-Start on us without creating loops.
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 06 Apr 2014 17:33:21 +0100
+
 gunicorn (18.0-1) unstable; urgency=low
 
   * New upstream release.

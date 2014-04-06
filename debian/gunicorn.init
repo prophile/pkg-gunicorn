@@ -1,8 +1,8 @@
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:		gunicorn
-# Required-Start:	$all
-# Required-Stop:	$all
+# Required-Start:	$local_fs $remote_fs $network $syslog
+# Required-Stop:	$local_fs $remote_fs $network $syslog
 # Should-Start:		$local_fs
 # Should-Stop:		$local_fs
 # Default-Start:	2 3 4 5
