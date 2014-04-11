@@ -27,9 +27,6 @@ test -x $HELPER || exit 0
 
 Action() {
 	mkdir -p $PID_DIR
-	mkdir -p $LOG_DIR
-	chmod 750 $LOG_DIR
-	chown root:adm $LOG_DIR
 
 	log_daemon_msg "$1"
 	shift
