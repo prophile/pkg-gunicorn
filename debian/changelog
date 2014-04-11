@@ -1,9 +1,9 @@
-gunicorn (18.0-3) UNRELEASED; urgency=low
+gunicorn (18.0-3) unstable; urgency=low
 
   * Set permissions on /var/log/gunicorn so that workers (not just the master
     running as root) can write to logfiles.
 
- -- Chris Lamb <lamby@debian.org>  Fri, 11 Apr 2014 16:11:20 +0100
+ -- Chris Lamb <lamby@debian.org>  Fri, 11 Apr 2014 16:12:46 +0100
 
 gunicorn (18.0-2) unstable; urgency=low
 
