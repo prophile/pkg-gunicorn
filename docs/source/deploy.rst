@@ -77,18 +77,39 @@ To turn off buffering, you only need to add ``proxy_buffering off;`` to your
 ``location`` block::
 
   ...
-  location / {
+  location @proxy_to_app {
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header Host $http_host;
       proxy_redirect off;
       proxy_buffering off;
 
-      if (!-f $request_filename) {
-          proxy_pass http://app_server;
-          break;
-      }
+      proxy_pass http://app_server;
   }
   ...
+
+When Nginx is handling SSL it is helpful to pass the protocol information
+to Gunicorn. Many web frameworks use this information to generate URLs.
+Without this information, the application may mistakenly generate 'http'
+URLs in 'https' responses, leading to mixed content warnings or broken
+applications. In this case, configure Nginx to pass an appropriate header::
+
+    ...
+    proxy_set_header X-Forwarded-Proto $scheme;
+    ...
+
+If you are running Nginx on a different host than Gunicorn you need to tell
+Gunicorn to trust the ``X-Forwarded-*`` headers sent by Nginx. By default,
+Gunicorn will only trust these headers if the connection comes from localhost.
+This is to prevent a malicious client from forging these headers::
+
+  gunicorn -w 3 --forwarded-allow-ips="10.170.3.217,10.170.3.220" test:app
+
+When the Gunicorn host is completely firewalled from the external network such
+that all connections come from a trusted proxy (e.g. Heroku) this value can
+be set to '*'. Using this value is **potentially dangerous** if connections to
+Gunicorn may come from untrusted proxies or directly from clients since the
+application may be tricked into serving SSL-only content over an insecure
+connection.
 
 Using Virtualenv
 ================
@@ -121,7 +142,7 @@ Monitoring
 .. note::
     Make sure that when using either of these service monitors you do not
     enable the Gunicorn's daemon mode. These monitors expect that the process
-    they launch will be the process they need to monior. Daemonizing
+    they launch will be the process they need to monitor. Daemonizing
     will fork-exec which creates an unmonitored process and generally just
     confuses the monitor services.
 
@@ -148,15 +169,15 @@ Create a ``Procfile`` in your project::
 
     gunicorn = gunicorn -w 3 test:app
 
-You can any other applications that should be launched at the same time.
+You can launch any other applications that should be launched at the same time.
 
-Then you can start your gunicorn application using `gafferp <http://gaffer.readthedocs.org/en/latest/gafferp.html>`_.::
+Then you can start your gunicorn application using `gaffer <http://gaffer.readthedocs.org/en/latest/gaffer.html>`_.::
 
-    gafferp start
+    gaffer start
 
 If gafferd is launched you can also load your Procfile in it directly::
 
-    gafferp load
+    gaffer load
 
 All your applications will be then supervised by gafferd.
 
@@ -199,7 +220,7 @@ Another useful tool to monitor and control Gunicorn is Supervisor_. A
     user=nobody
     autostart=true
     autorestart=true
-    redirect_stderr=True
+    redirect_stderr=true
 
 Upstart
 -------
@@ -225,7 +246,7 @@ Systemd
 -------
 
 A tool that is starting to be common on linux systems is Systemd_. Here
-are configurations files to set the gunicorn launch in systemd and 
+are configurations files to set the gunicorn launch in systemd and
 the interfaces on which gunicorn will listen. The sockets will be managed by
 systemd:
 
@@ -235,12 +256,14 @@ systemd:
     Description=gunicorn daemon
 
     [Service]
-    User=urban
+    Type=forking
+    PIDFile=/home/urban/gunicorn/gunicorn.pid
+    User=someuser
     WorkingDirectory=/home/urban/gunicorn/bin
-    ExecStart=/home/urban/gunicorn/bin/gunicorn --debug --log-level debug test:app
-
-    [Install]
-    WantedBy=multi-user.target
+    ExecStart=/home/someuser/gunicorn/bin/gunicorn -p /home/urban/gunicorn/gunicorn.pid- test:app
+    ExecReload=/bin/kill -s HUP $MAINPID
+    ExecStop=/bin/kill -s QUIT $MAINPID
+    PrivateTmp=true
 
 **gunicorn.socket**::
 
@@ -248,7 +271,7 @@ systemd:
     Description=gunicorn socket
 
     [Socket]
-    ListenStream=/run/unicorn.sock
+    ListenStream=/run/gunicorn.sock
     ListenStream=0.0.0.0:9000
     ListenStream=[::]:8000
 
@@ -258,7 +281,7 @@ systemd:
 After running curl http://localhost:9000/ gunicorn should start and you
 should see something like that in logs::
 
-    2013-02-19 23:48:19 [31436] [DEBUG] Socket activation sockets: unix:/run/unicorn.sock,http://0.0.0.0:9000,http://[::]:8000
+    2013-02-19 23:48:19 [31436] [DEBUG] Socket activation sockets: unix:/run/gunicorn.sock,http://0.0.0.0:9000,http://[::]:8000
 
 Logging
 =======

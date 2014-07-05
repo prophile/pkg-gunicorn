@@ -4,12 +4,18 @@
 # See the NOTICE for more information.
 
 from functools import partial
-import os
+import errno
 
 try:
     import eventlet
 except ImportError:
     raise RuntimeError("You need eventlet installed to use this worker.")
+
+# validate the eventlet version
+if eventlet.version_info < (0, 9, 7):
+    raise RuntimeError("You need eventlet >= 0.9.7")
+
+
 from eventlet import hubs
 from eventlet.greenio import GreenSocket
 from eventlet.hubs import trampoline
@@ -35,16 +41,13 @@ def patch_sendfile():
 
 class EventletWorker(AsyncWorker):
 
-    @classmethod
-    def setup(cls):
-        import eventlet
-        if eventlet.version_info < (0, 9, 7):
-            raise RuntimeError("You need eventlet >= 0.9.7")
+    def patch(self):
         eventlet.monkey_patch(os=False)
         patch_sendfile()
 
     def init_process(self):
         hubs.use_hub()
+        self.patch()
         super(EventletWorker, self).init_process()
 
     def timeout_ctx(self):
@@ -53,8 +56,7 @@ class EventletWorker(AsyncWorker):
     def handle(self, listener, client, addr):
         if self.cfg.is_ssl:
             client = eventlet.wrap_ssl(client, server_side=True,
-                    do_handshake_on_connect=False,
-                    **self.cfg.ssl_options)
+                **self.cfg.ssl_options)
 
         super(EventletWorker, self).handle(listener, client, addr)
 
@@ -64,6 +66,7 @@ class EventletWorker(AsyncWorker):
     def run(self):
         acceptors = []
         for sock in self.sockets:
+            sock = GreenSocket(sock)
             sock.setblocking(1)
             hfun = partial(self.handle, sock)
             acceptor = eventlet.spawn(eventlet.serve, sock, hfun,

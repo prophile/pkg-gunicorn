@@ -12,9 +12,9 @@ except ImportError: # python 2.6
     from . import argparse_compat as argparse
 import os
 import pwd
+import ssl
 import sys
 import textwrap
-import types
 
 from gunicorn import __version__
 from gunicorn.errors import ConfigError
@@ -77,10 +77,6 @@ class Config(object):
                 help="show program's version number and exit")
         parser.add_argument("args", nargs="*", help=argparse.SUPPRESS)
 
-        keys = list(self.settings)
-        def sorter(k):
-            return (self.settings[k].section, self.settings[k].order)
-
         keys = sorted(self.settings, key=self.settings.__getitem__)
         for k in keys:
             self.settings[k].add_option(parser)
@@ -88,12 +84,32 @@ class Config(object):
         return parser
 
     @property
+    def worker_class_str(self):
+        uri = self.settings['worker_class'].get()
+
+        ## are we using a threaded worker?
+        is_sync = uri.endswith('SyncWorker') or uri == 'sync'
+        if is_sync and self.threads > 1:
+            return "threads"
+        return uri
+
+    @property
     def worker_class(self):
         uri = self.settings['worker_class'].get()
+
+        ## are we using a threaded worker?
+        is_sync = uri.endswith('SyncWorker') or uri == 'sync'
+        if is_sync and self.threads > 1:
+            uri = "gunicorn.workers.gthread.ThreadWorker"
+
         worker_class = util.load_class(uri)
         if hasattr(worker_class, "setup"):
             worker_class.setup()
         return worker_class
+
+    @property
+    def threads(self):
+        return self.settings['threads'].get()
 
     @property
     def workers(self):
@@ -123,8 +139,13 @@ class Config(object):
     @property
     def logger_class(self):
         uri = self.settings['logger_class'].get()
-        logger_class = util.load_class(uri, default="simple",
-            section="gunicorn.loggers")
+        if uri == "simple":
+            # support the default
+            uri = "gunicorn.glogging.Logger"
+
+        logger_class = util.load_class(uri,
+                default="gunicorn.glogging.Logger",
+                section="gunicorn.loggers")
 
         if hasattr(logger_class, "install"):
             logger_class.install()
@@ -137,12 +158,9 @@ class Config(object):
     @property
     def ssl_options(self):
         opts = {}
-        if self.certfile:
-            opts['certfile'] = self.certfile
-
-        if self.keyfile:
-            opts['keyfile'] = self.keyfile
-
+        for name, value in self.settings.items():
+            if value.section == 'Ssl':
+                opts[name] = value.get()
         return opts
 
     @property
@@ -156,9 +174,9 @@ class Config(object):
         for e in raw_env:
             s = six.bytes_to_str(e)
             try:
-                k, v = s.split('=')
+                k, v = s.split('=', 1)
             except ValueError:
-                raise RuntimeError("environement setting %r invalid" % s)
+                raise RuntimeError("environment setting %r invalid" % s)
 
             env[k] = v
 
@@ -427,6 +445,7 @@ def get_default_config_file():
     return None
 
 
+# Please remember to run "make html" in docs/ after update "desc" attributes.
 class ConfigFile(Setting):
     name = "config"
     section = "Config File"
@@ -496,13 +515,16 @@ class Workers(Setting):
     meta = "INT"
     validator = validate_pos_int
     type = int
-    default = 1
+    default = int(os.environ.get('WEB_CONCURRENCY', 1))
     desc = """\
         The number of worker process for handling requests.
 
         A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
         want to vary this a bit to find the best for your particular
         application's work load.
+
+        By default, the value of the WEB_CONCURRENCY environment variable. If
+        it is not defined, the default is 1.
         """
 
 
@@ -526,7 +548,7 @@ class WorkerClass(Setting):
 
         * ``sync``
         * ``eventlet`` - Requires eventlet >= 0.9.7
-        * ``gevent``   - Requires gevent >= 0.12.2 (?)
+        * ``gevent``   - Requires gevent >= 0.13
         * ``tornado``  - Requires tornado >= 0.2
 
         Optionally, you can provide your own worker by giving gunicorn a
@@ -534,6 +556,26 @@ class WorkerClass(Setting):
         alternative syntax will load the gevent class:
         ``gunicorn.workers.ggevent.GeventWorker``. Alternatively the syntax
         can also load the gevent class with ``egg:gunicorn#gevent``
+        """
+
+class WorkerThreads(Setting):
+    name = "threads"
+    section = "Worker Processes"
+    cli = ["--threads"]
+    meta = "INT"
+    validator = validate_pos_int
+    type = int
+    default = 1
+    desc = """\
+        The number of worker threads for handling requests.
+
+        Run each worker with the specified number of threads.
+
+        A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
+        want to vary this a bit to find the best for your particular
+        application's work load.
+
+        If it is not defined, the default is 1.
         """
 
 
@@ -690,9 +732,28 @@ class Debug(Setting):
     desc = """\
         Turn on debugging in the server.
 
-        This limits the number of worker processes to 1 and changes some error
-        handling that's sent to clients.
+        **DEPRECATED**: This no functionality was removed after v18.0.
+        This option is now a no-op.
         """
+
+
+class Reload(Setting):
+    name = "reload"
+    section = 'Debugging'
+    cli = ['--reload']
+    validator = validate_bool
+    action = 'store_true'
+    default = False
+    desc = '''\
+        Restart workers when code changes.
+
+        This setting is intended for development. It will cause workers to be
+        restarted whenever application code changes.
+
+        The reloader is incompatible with application preloading. When using a
+        paste configuration be sure that the server block does not import any
+        application code or the reload will not work as designed.
+        '''
 
 
 class Spew(Setting):
@@ -766,7 +827,7 @@ class Daemon(Setting):
 class Env(Setting):
     name = "raw_env"
     action = "append"
-    section = "Server Mechanic"
+    section = "Server Mechanics"
     cli = ["-e", "--env"]
     meta = "ENV"
     validator = validate_list_string
@@ -779,7 +840,7 @@ class Env(Setting):
 
             $ gunicorn -b 127.0.0.1:8000 --env FOO=1 test:app
 
-        and test for the foo variable environement in your application.
+        and test for the foo variable environment in your application.
         """
 
 
@@ -796,6 +857,18 @@ class Pidfile(Setting):
         If not set, no PID file will be written.
         """
 
+class WorkerTmpDir(Setting):
+    name = "worker_tmp_dir"
+    section = "Server Mechanics"
+    cli = ["--worker-tmp-dir"]
+    meta = "DIR"
+    validator = validate_string
+    default = None
+    desc = """\
+        A directory to use for the worker heartbeat temporary file.
+
+        If not set, the default temporary directory will be used.
+        """
 
 class User(Setting):
     name = "user"
@@ -891,26 +964,15 @@ class SecureSchemeHeader(Setting):
         """
 
 
-class XForwardedFor(Setting):
-    name = "x_forwarded_for_header"
-    section = "Server Mechanics"
-    meta = "STRING"
-    validator = validate_string
-    default = 'X-FORWARDED-FOR'
-    desc = """\
-        Set the X-Forwarded-For header that identify the originating IP
-        address of the client connection to gunicorn via a proxy.
-        """
-
-
 class ForwardedAllowIPS(Setting):
     name = "forwarded_allow_ips"
     section = "Server Mechanics"
+    cli = ["--forwarded-allow-ips"]
     meta = "STRING"
     validator = validate_string_to_list
     default = "127.0.0.1"
     desc = """\
-        Front-end's IPs from which allowed to handle X-Forwarded-* headers.
+        Front-end's IPs from which allowed to handle set secure headers.
         (comma separate).
 
         Set to "*" to disable checking of Front-end IPs (useful for setups
@@ -941,27 +1003,27 @@ class AccessLogFormat(Setting):
     validator = validate_string
     default = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
     desc = """\
-        The Access log format .
+        The access log format.
 
-        By default:
-
-        %(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
-
-
-        h: remote address
-        l: '-'
-        u: currently '-', may be user name in future releases
-        t: date of the request
-        r: status line (ex: GET / HTTP/1.1)
-        s: status
-        b: response length or '-'
-        f: referer
-        a: user agent
-        T: request time in seconds
-        D: request time in microseconds,
-        p: process ID
-        {Header}i: request header
-        {Header}o: response header
+        ==========  ===========
+        Identifier  Description
+        ==========  ===========
+        h           remote address
+        l           '-'
+        u           currently '-', may be user name in future releases
+        t           date of the request
+        r           status line (e.g. ``GET / HTTP/1.1``)
+        s           status
+        b           response length or '-'
+        f           referer
+        a           user agent
+        T           request time in seconds
+        D           request time in microseconds
+        L           request time in decimal seconds
+        p           process ID
+        {Header}i   request header
+        {Header}o   response header
+        ==========  ===========
         """
 
 
@@ -971,7 +1033,7 @@ class ErrorLog(Setting):
     cli = ["--error-logfile", "--log-file"]
     meta = "FILE"
     validator = validate_string
-    default = "-"
+    default = None
     desc = """\
         The Error log file to write to.
 
@@ -1005,7 +1067,7 @@ class LoggerClass(Setting):
     cli = ["--logger-class"]
     meta = "STRING"
     validator = validate_class
-    default = "simple"
+    default = "gunicorn.glogging.Logger"
     desc = """\
         The logger you want to use to log events in gunicorn.
 
@@ -1027,10 +1089,11 @@ class LogConfig(Setting):
     validator = validate_string
     default = None
     desc = """\
-The log config file to use.
-Gunicorn uses the standard Python logging module's Configuration
-file format.
-"""
+    The log config file to use.
+    Gunicorn uses the standard Python logging module's Configuration
+    file format.
+    """
+
 
 class SyslogTo(Setting):
     name = "syslog_addr"
@@ -1049,7 +1112,16 @@ class SyslogTo(Setting):
         default = "udp://localhost:514"
 
     desc = """\
-    Address to send syslog messages
+    Address to send syslog messages.
+
+    Address is a string of the form:
+
+    * 'unix://PATH#TYPE' : for unix domain socket. TYPE can be 'stream'
+      for the stream driver or 'dgram' for the dgram driver.
+      'stream' is the default.
+    * 'udp://HOST:PORT' : for UDP sockets
+    * 'tcp://HOST:PORT' : for TCP sockets
+
     """
 
 
@@ -1061,7 +1133,7 @@ class Syslog(Setting):
     action = 'store_true'
     default = False
     desc = """\
-    Log to syslog.
+    Send *Gunicorn* logs to syslog.
     """
 
 
@@ -1173,12 +1245,17 @@ class PythonPath(Setting):
 class Paste(Setting):
     name = "paste"
     section = "Server Mechanics"
-    cli = ["--paster"]
+    cli = ["--paste", "--paster"]
     meta = "STRING"
     validator = validate_string
     default = None
     desc = """\
-        Load a paste.deploy config file.
+        Load a paste.deploy config file. The argument may contain a "#" symbol
+        followed by the name of an app section from the config file, e.g.
+        "production.ini#admin".
+
+        At this time, using alternate server blocks is not supported. Use the
+        command line arguments to control server configuration instead.
         """
 
 
@@ -1281,6 +1358,43 @@ class PostWorkerInit(Setting):
         Worker.
         """
 
+class WorkerInt(Setting):
+    name = "worker_int"
+    section = "Server Hooks"
+    validator = validate_callable(1)
+    type = six.callable
+
+    def worker_int(worker):
+        pass
+
+    default = staticmethod(worker_int)
+    desc = """\
+        Called just after a worker exited on SIGINT or SIGTERM.
+
+        The callable needs to accept one instance variable for the initialized
+        Worker.
+        """
+
+
+class WorkerAbort(Setting):
+    name = "worker_abort"
+    section = "Server Hooks"
+    validator = validate_callable(1)
+    type = six.callable
+
+    def worker_abort(worker):
+        pass
+
+    default = staticmethod(worker_abort)
+    desc = """\
+        Called when a worker received the SIGABRT signal.
+
+        This call generally happen on timeout.
+
+        The callable needs to accept one instance variable for the initialized
+        Worker.
+        """
+
 
 class PreExec(Setting):
     name = "pre_exec"
@@ -1368,6 +1482,21 @@ class NumWorkersChanged(Setting):
         None.
         """
 
+class OnExit(Setting):
+    name = "on_exit"
+    section = "Server Hooks"
+    validator = validate_callable(1)
+
+    def on_exit(server):
+        pass
+
+    default = staticmethod(on_exit)
+    desc = """\
+        Called just before exiting gunicorn.
+
+        The callable needs to accept a single instance variable for the Arbiter.
+        """
+
 
 class ProxyProtocol(Setting):
     name = "proxy_protocol"
@@ -1386,12 +1515,12 @@ class ProxyProtocol(Setting):
 
         Example for stunnel config::
 
-        [https]
-        protocol = proxy
-        accept  = 443
-        connect = 80
-        cert = /etc/ssl/certs/stunnel.pem
-        key = /etc/ssl/certs/stunnel.key
+            [https]
+            protocol = proxy
+            accept  = 443
+            connect = 80
+            cert = /etc/ssl/certs/stunnel.pem
+            key = /etc/ssl/certs/stunnel.key
         """
 
 
@@ -1403,6 +1532,10 @@ class ProxyAllowFrom(Setting):
     default = "127.0.0.1"
     desc = """\
         Front-end's IPs from which allowed accept proxy requests (comma separate).
+
+        Set to "*" to disable checking of Front-end IPs (useful for setups
+        where you don't know in advance the IP address of Front-end, but
+        you still trust the environment)
         """
 
 
@@ -1428,3 +1561,67 @@ class CertFile(Setting):
     desc = """\
     SSL certificate file
     """
+
+class SSLVersion(Setting):
+    name = "ssl_version"
+    section = "Ssl"
+    cli = ["--ssl-version"]
+    validator = validate_pos_int
+    default = ssl.PROTOCOL_TLSv1
+    desc = """\
+    SSL version to use (see stdlib ssl module's)
+    """
+
+class CertReqs(Setting):
+    name = "cert_reqs"
+    section = "Ssl"
+    cli = ["--cert-reqs"]
+    validator = validate_pos_int
+    default = ssl.CERT_NONE
+    desc = """\
+    Whether client certificate is required (see stdlib ssl module's)
+    """
+
+class CACerts(Setting):
+    name = "ca_certs"
+    section = "Ssl"
+    cli = ["--ca-certs"]
+    meta = "FILE"
+    validator = validate_string
+    default = None
+    desc = """\
+    CA certificates file
+    """
+
+class SuppressRaggedEOFs(Setting):
+    name = "suppress_ragged_eofs"
+    section = "Ssl"
+    cli = ["--suppress-ragged-eofs"]
+    action = "store_true"
+    default = True
+    validator = validate_bool
+    desc = """\
+    Suppress ragged EOFs (see stdlib ssl module's)
+    """
+
+class DoHandshakeOnConnect(Setting):
+    name = "do_handshake_on_connect"
+    section = "Ssl"
+    cli = ["--do-handshake-on-connect"]
+    validator = validate_bool
+    action = "store_true"
+    default = False
+    desc = """\
+    Whether to perform SSL handshake on socket connect (see stdlib ssl module's)
+    """
+
+if sys.version_info >= (2, 7):
+    class Ciphers(Setting):
+        name = "ciphers"
+        section = "Ssl"
+        cli = ["--ciphers"]
+        validator = validate_string
+        default = 'TLSv1'
+        desc = """\
+        Ciphers to use (see stdlib ssl module's)
+        """

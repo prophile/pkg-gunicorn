@@ -1,3 +1,4 @@
+
 .. _design:
 
 ======
@@ -48,6 +49,19 @@ There's also a Tornado worker class. It can be used to write applications using
 the Tornado framework. Although the Tornado workers are capable of serving a
 WSGI application, this is not a recommended configuration.
 
+AsyncIO Workers
+---------------
+
+These workers are compatible with python3. You have two kind of workers.
+
+The worker `gthread` is a threaded worker. It accepts connections in the
+main loop, accepted connections are are added to the thread pool as a
+connection job. On keepalive connections are put back in the loop
+waiting for an event. If no event happen after the keep alive timeout,
+the connection is closed.
+
+The worker `gaiohttp` is a full asyncio worker using aiohttp_.
+
 Choosing a Worker Type
 ======================
 
@@ -97,3 +111,4 @@ of the entire system.
 .. _Eventlet: http://eventlet.net
 .. _Gevent: http://gevent.org
 .. _Slowloris: http://ha.ckers.org/slowloris/
+.. _aiohttp: https://github.com/KeepSafe/aiohttp
