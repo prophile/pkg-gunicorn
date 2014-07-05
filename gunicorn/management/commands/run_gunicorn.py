@@ -4,11 +4,14 @@
 # See the NOTICE for more information.
 
 from optparse import make_option
+import sys
 
 from django.core.management.base import BaseCommand, CommandError
 
 from gunicorn.app.djangoapp import DjangoApplicationCommand
 from gunicorn.config import make_settings
+from gunicorn import util
+
 
 # monkey patch django.
 # This patch make sure that we use real threads to get the ident which
@@ -42,18 +45,13 @@ except ImportError:
 
 
 def make_options():
-    g_settings = make_settings(ignore=("version"))
-
-    keys = g_settings.keys()
-
-    def sorter(k):
-        return (g_settings[k].section, g_settings[k].order)
-
     opts = [
         make_option('--adminmedia', dest='admin_media_path', default='',
         help='Specifies the directory from which to serve admin media.')
     ]
 
+    g_settings = make_settings(ignore=("version"))
+    keys = g_settings.keys()
     for k in keys:
         if k in ('pythonpath', 'django_settings',):
             continue
@@ -91,11 +89,25 @@ class Command(BaseCommand):
     requires_model_validation = False
 
     def handle(self, addrport=None, *args, **options):
+
+        # deprecation warning to announce future deletion in R21
+        util.warn("""This command is deprecated.
+
+        You should now run your application with the WSGI interface
+        installed with your project. Ex.:
+
+            gunicorn myproject.wsgi:application
+
+        See https://docs.djangoproject.com/en/1.5/howto/deployment/wsgi/gunicorn/
+        for more info.""")
+
         if args:
             raise CommandError('Usage is run_gunicorn %s' % self.args)
 
         if addrport:
+            sys.argv = sys.argv[:-1]
             options['bind'] = addrport
 
         admin_media_path = options.pop('admin_media_path', '')
+
         DjangoApplicationCommand(options, admin_media_path).run()

@@ -7,6 +7,7 @@ from datetime import datetime
 import errno
 import socket
 import ssl
+import sys
 
 import gunicorn.http as http
 import gunicorn.http.wsgi as wsgi
@@ -31,9 +32,10 @@ class AsyncWorker(base.Worker):
         try:
             parser = http.RequestParser(self.cfg, client)
             try:
+                listener_name = listener.getsockname()
                 if not self.cfg.keepalive:
                     req = six.next(parser)
-                    self.handle_request(listener, req, client, addr)
+                    self.handle_request(listener_name, req, client, addr)
                 else:
                     # keepalive loop
                     while True:
@@ -42,15 +44,19 @@ class AsyncWorker(base.Worker):
                             req = six.next(parser)
                         if not req:
                             break
-                        self.handle_request(listener, req, client, addr)
+                        self.handle_request(listener_name, req, client, addr)
             except http.errors.NoMoreData as e:
                 self.log.debug("Ignored premature client disconnection. %s", e)
             except StopIteration as e:
                 self.log.debug("Closing connection. %s", e)
             except ssl.SSLError:
-                raise  # pass to next try-except level
+                exc_info = sys.exc_info()
+                # pass to next try-except level
+                six.reraise(exc_info[0], exc_info[1], exc_info[2])
             except socket.error:
-                raise  # pass to next try-except level
+                exc_info = sys.exc_info()
+                # pass to next try-except level
+                six.reraise(exc_info[0], exc_info[1], exc_info[2])
             except Exception as e:
                 self.handle_error(req, client, addr, e)
         except ssl.SSLError as e:
@@ -73,14 +79,15 @@ class AsyncWorker(base.Worker):
         finally:
             util.close(client)
 
-    def handle_request(self, listener, req, sock, addr):
+    def handle_request(self, listener_name, req, sock, addr):
         request_start = datetime.now()
         environ = {}
         resp = None
         try:
             self.cfg.pre_request(self, req)
             resp, environ = wsgi.create(req, sock, addr,
-                    listener.getsockname(), self.cfg)
+                    listener_name, self.cfg)
+            environ["wsgi.multithread"] = True
             self.nr += 1
             if self.alive and self.nr >= self.max_requests:
                 self.log.info("Autorestarting worker after current request.")
@@ -111,6 +118,7 @@ class AsyncWorker(base.Worker):
             if resp and resp.headers_sent:
                 # If the requests have already been sent, we should close the
                 # connection to indicate the error.
+                self.log.exception("Error handling request")
                 try:
                     sock.shutdown(socket.SHUT_RDWR)
                     sock.close()

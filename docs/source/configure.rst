@@ -31,6 +31,42 @@ Once again, in order of least to most authoritative:
     It also allows you to know if your application can be launched.
 
 
+Command Line
+============
+
+If an option is specified on the command line, it overrides all other values
+that may have been specified in the app specific settings, or in the optional
+configuration file. Not all Gunicorn settings are available to be set from the
+command line. To see the full list of command line settings you can do the
+usual::
+
+    $ gunicorn -h
+
+There is also a ``--version`` flag available to the command line scripts that
+isn't mentioned in the list of :ref:`settings <settings>`.
+
+
+Configuration File
+==================
+
+The configuration file should be a valid Python source file. It only needs to
+be readable from the file system. More specifically, it does not need to be
+importable. Any Python is valid. Just consider that this will be run every time
+you start Gunicorn (including when you signal Gunicorn to reload).
+
+To set a parameter, just assign to it. There's no special syntax. The values
+you provide will be used for the configuration values.
+
+For instance::
+
+    import multiprocessing
+
+    bind = "127.0.0.1:8000"
+    workers = multiprocessing.cpu_count() * 2 + 1
+
+All the settings are mentioned in the :ref:`settings <settings>` list.
+
+
 Framework Settings
 ==================
 
@@ -56,47 +92,3 @@ In your INI file, you can specify to use Gunicorn as the server like such::
 Any parameters that Gunicorn knows about will automatically be inserted into
 the base configuration. Remember that these will be overridden by the config
 file and/or the command line.
-
-Configuration File
-==================
-
-The configuration file should be a valid Python source file. It only needs to
-be readable from the file system. More specifically, it does not need to be
-importable. Any Python is valid. Just consider that this will be run every time
-you start Gunicorn (including when you signal Gunicorn to reload).
-
-To set a parameter, just assign to it. There's no special syntax. The values
-you provide will be used for the configuration values.
-
-For instance::
-
-    import multiprocessing
-
-    bind = "127.0.0.1:8000"
-    workers = multiprocessing.cpu_count() * 2 + 1
-
-On a side note, Python's older than 2.6 can use sysconf to get the
-number of processors::
-
-    import os
-
-    def numCPUs():
-        if not hasattr(os, "sysconf"):
-            raise RuntimeError("No sysconf detected.")
-        return os.sysconf("SC_NPROCESSORS_ONLN")
-
-Command Line
-============
-
-If an option is specified on the command line, it overrides all other values
-that may have been specified in the app specific settings, or in the optional
-configuration file. Not all Gunicorn settings are available to be set from the
-command line. To see the full list of command line settings you can do the
-usual::
-
-    $ gunicorn -h
-
-There is also a ``--version`` flag available to the command line scripts that
-isn't mentioned in the list of settings.
-
-.. include:: settings.rst

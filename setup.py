@@ -10,6 +10,7 @@ import sys
 
 from gunicorn import __version__
 
+
 CLASSIFIERS = [
     'Development Status :: 4 - Beta',
     'Environment :: Other Environment',
@@ -18,14 +19,13 @@ CLASSIFIERS = [
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
     'Programming Language :: Python',
-    'Programming Language :: Python',
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
     'Programming Language :: Python :: 3.3',
+    'Programming Language :: Python :: 3.4',
     'Topic :: Internet',
     'Topic :: Utilities',
     'Topic :: Software Development :: Libraries :: Python Modules',
@@ -55,13 +55,15 @@ class PyTest(Command):
         pass
 
     def run(self):
-        import sys,subprocess
+        import subprocess
         basecmd = [sys.executable, '-m', 'pytest']
         if self.cov:
             basecmd += ['--cov', 'gunicorn']
         errno = subprocess.call(basecmd + ['tests'])
         raise SystemExit(errno)
 
+
+REQUIREMENTS = []
 
 setup(
     name = 'gunicorn',
@@ -82,23 +84,14 @@ setup(
     tests_require = tests_require,
     cmdclass = {'test': PyTest},
 
+    install_requires = REQUIREMENTS,
+
     entry_points="""
 
     [console_scripts]
     gunicorn=gunicorn.app.wsgiapp:run
     gunicorn_django=gunicorn.app.djangoapp:run
     gunicorn_paster=gunicorn.app.pasterapp:run
-
-    [gunicorn.workers]
-    sync=gunicorn.workers.sync:SyncWorker
-    eventlet=gunicorn.workers.geventlet:EventletWorker
-    gevent=gunicorn.workers.ggevent:GeventWorker
-    gevent_wsgi=gunicorn.workers.ggevent:GeventPyWSGIWorker
-    gevent_pywsgi=gunicorn.workers.ggevent:GeventPyWSGIWorker
-    tornado=gunicorn.workers.gtornado:TornadoWorker
-
-    [gunicorn.loggers]
-    simple=gunicorn.glogging:Logger
 
     [paste.server_runner]
     main=gunicorn.app.pasterapp:paste_server

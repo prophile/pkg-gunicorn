@@ -25,6 +25,7 @@ def paste_config(gconfig, config_url, relative_to, global_conf=None):
     sys.path.insert(0, relative_to)
     pkg_resources.working_set.add_entry(relative_to)
 
+    config_url = config_url.split('#')[0]
     cx = loadwsgi.loadcontext(SERVER, config_url, relative_to=relative_to,
             global_conf=global_conf)
     gc, lc = cx.global_conf.copy(), cx.local_conf.copy()
@@ -161,8 +162,8 @@ class PasterServerApplication(PasterBaseApplication):
 
 def run():
     """\
-    The ``gunicorn_paster`` command for launcing Paster compatible
-    apllications like Pylons or Turbogears2
+    The ``gunicorn_paster`` command for launching Paster compatible
+    applications like Pylons or Turbogears2
     """
     util.warn("""This command is deprecated.
 
@@ -187,5 +188,13 @@ def paste_server(app, gcfg=None, host="127.0.0.1", port=None, *args, **kwargs):
     port = 5000
 
     """
+
+    util.warn("""This command is deprecated.
+
+    You should now use the `--paste` option. Ex.:
+
+        gunicorn --paste development.ini
+    """)
+
     from gunicorn.app.pasterapp import PasterServerApplication
     PasterServerApplication(app, gcfg=gcfg, host=host, port=port, *args, **kwargs).run()
