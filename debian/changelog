@@ -1,3 +1,9 @@
+gunicorn (19.0-1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 05 Jul 2014 16:58:37 +0100
+
 gunicorn (18.0-3) unstable; urgency=low
 
   * Set permissions on /var/log/gunicorn so that workers (not just the master
