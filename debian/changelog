@@ -2,6 +2,7 @@ gunicorn (19.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
     - Update 0001-drop-supplemental-groups.patch.
+  * Bump Standards-Version to 3.9.5.
 
  -- Chris Lamb <lamby@debian.org>  Sat, 05 Jul 2014 16:58:37 +0100
 
