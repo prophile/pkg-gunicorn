@@ -3,21 +3,54 @@
 POD_MANPAGES=$(wildcard debian/manpages/*.pod)
 MANPAGES=$(patsubst %.pod,%.1, $(POD_MANPAGES))
 
+export DH_VERBOSE=1
+export PYBUILD_NAME=gunicorn
+
+
 %:
-	dh $@ --with=python2
+	dh $@ --with=python2,python3 --buildsystem=pybuild
 
 %.1: %.pod
 	pod2man $< $@
 
 override_dh_auto_clean:
 	rm -f Makefile
-	rm -f gunicorn/workers/gaiohttp.py
 	dh_auto_clean
 
 override_dh_auto_build: $(MANPAGES)
 	dh_auto_build
 
+override_dh_auto_install:
+	dh_auto_install
+	# Shuffle the scripts into the correct binary package.
+	mkdir -p debian/gunicorn/usr/bin
+	mkdir -p debian/gunicorn3/usr/bin
+	mv debian/python-gunicorn/usr/bin/* debian/gunicorn/usr/bin
+	# The Python 3 versions must not collide with the Python 2 versions.
+	mv debian/python3-gunicorn/usr/bin/gunicorn \
+	   debian/gunicorn3/usr/bin/gunicorn3
+	mv debian/python3-gunicorn/usr/bin/gunicorn_django \
+	   debian/gunicorn3/usr/bin/gunicorn3_django
+	mv debian/python3-gunicorn/usr/bin/gunicorn_paster \
+	   debian/gunicorn3/usr/bin/gunicorn3_paster
+	rmdir debian/python3-gunicorn/usr/bin
+	# gaiohttp.py isn't supported in Python 2.
+	rm -f debian/python-gunicorn/workers/gaiohttp.py
+
 override_dh_installexamples:
 	dh_installexamples
-	find debian/gunicorn/usr/share/doc/gunicorn/examples \
+	find debian/gunicorn-common/usr/share/doc/gunicorn-common/examples \
 		-executable -type f -print0 | xargs -0r chmod -x
+
+override_dh_installinit:
+	dh_installinit --name=gunicorn
+
+override_dh_installman:
+	dh_installman
+	# Rename the Python 3 versions.
+	mv debian/gunicorn3/usr/share/man/man1/gunicorn.1 \
+	   debian/gunicorn3/usr/share/man/man1/gunicorn3.1
+	mv debian/gunicorn3/usr/share/man/man1/gunicorn_django.1 \
+	   debian/gunicorn3/usr/share/man/man1/gunicorn3_django.1
+	mv debian/gunicorn3/usr/share/man/man1/gunicorn_paster.1 \
+	   debian/gunicorn3/usr/share/man/man1/gunicorn3_paster.1
