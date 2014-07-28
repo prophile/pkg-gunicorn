@@ -6,8 +6,6 @@ Subject: 0001-drop-supplemental-groups
  gunicorn/util.py | 9 +++++++++
  1 file changed, 9 insertions(+)
 
-diff --git a/gunicorn/util.py b/gunicorn/util.py
-index 9b7529f..6e4e69c 100644
 --- a/gunicorn/util.py
 +++ b/gunicorn/util.py
 @@ -4,6 +4,7 @@
@@ -18,7 +16,7 @@ index 9b7529f..6e4e69c 100644
  import email.utils
  import fcntl
  import io
-@@ -147,6 +148,14 @@ def set_owner_process(uid, gid):
+@@ -152,6 +153,14 @@
          # groups like on osx or fedora
          gid = abs(gid) & 0x7FFFFFFF
          os.setgid(gid)
@@ -26,7 +24,7 @@ index 9b7529f..6e4e69c 100644
 +        # Also drop supplemental groups
 +        try:
 +            os.setgroups([])
-+        except OSError, e:
++        except OSError as e:
 +            if e.errno != errno.EPERM:
 +                raise
 +

@@ -1,3 +1,22 @@
+gunicorn (19.0-2) UNRELEASED; urgency=medium
+
+  * Add Python 3 support.
+  * d/control: Split the gunicorn package into separate binary packages
+    for the Python 2 and 3 library, the Python 2 and 3 command line
+    scripts, and common files.  Update build dependencies for Python 3.
+  * d/compat: Bump to version 8.
+  * d/patches/0001-drop-supplemental-groups.patch: Adapt for Python 3.
+  * d/rules:
+    - Use --buildsystem=pybuild and dh_python3.
+    - Update overrides for proper package installation.
+  * d/gunicorn.examples -> gunicorn-common.examples
+  * d/gunicorn.init -> gunicorn-common.init
+  * d/gunicorn.install -> gunicorn-common.install
+  * d/gunicorn3.manpages: Added.
+  * wrap-and-sort
+
+ -- Barry Warsaw <barry@debian.org>  Fri, 25 Jul 2014 17:37:29 -0400
+
 gunicorn (19.0-1) unstable; urgency=low
 
   * New upstream release.
