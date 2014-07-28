@@ -3,7 +3,7 @@
 POD_MANPAGES=$(wildcard debian/manpages/*.pod)
 MANPAGES=$(patsubst %.pod,%.1, $(POD_MANPAGES))
 
-export DH_VERBOSE=1
+#export DH_VERBOSE=1
 export PYBUILD_NAME=gunicorn
 
 
