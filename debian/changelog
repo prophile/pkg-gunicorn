@@ -6,7 +6,7 @@ gunicorn (19.0-3) UNRELEASED; urgency=medium
   * Call wrap-and-sort.
 
   [ Barry Warsaw ]
-  * Add Python 3 support.
+  * Add Python 3 support. (Closes: #756057)
   * d/control:
     - Split the gunicorn package into separate binary packages for the
       Python 2 and 3 library, the Python 2 and 3 command line scripts, and
