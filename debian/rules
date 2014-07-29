@@ -2,9 +2,13 @@
 
 POD_MANPAGES=$(wildcard debian/manpages/*.pod)
 MANPAGES=$(patsubst %.pod,%.1, $(POD_MANPAGES))
+PKGVERSION=$(shell dpkg-parsechangelog --show-field Version | cut -d - -f 1)
 
 #export DH_VERBOSE=1
 export PYBUILD_NAME=gunicorn
+
+# 2014-07-29 barry@debian.org: tox tests at build time needs more work.
+#export PYBUILD_TEST_TOX=1
 
 
 %:
@@ -35,7 +39,7 @@ override_dh_auto_install:
 	   debian/gunicorn3/usr/bin/gunicorn3_paster
 	rmdir debian/python3-gunicorn/usr/bin
 	# gaiohttp.py isn't supported in Python 2.
-	rm -f debian/python-gunicorn/workers/gaiohttp.py
+	rm -f debian/python-gunicorn/usr/lib/python*/dist-packages/gunicorn/workers/gaiohttp.py
 
 override_dh_installexamples:
 	dh_installexamples
@@ -46,6 +50,11 @@ override_dh_installinit:
 	dh_installinit --name=gunicorn
 
 override_dh_installman:
+	mkdir -p debian/tmp
+	help2man -s 8 -o debian/tmp/gunicorn-debian.8 \
+		 --version-string $(PKGVERSION) --no-info \
+		 -n "Control the Gunicorn daemons" \
+		 debian/gunicorn-debian
 	dh_installman
 	# Rename the Python 3 versions.
 	mv debian/gunicorn3/usr/share/man/man1/gunicorn.1 \
