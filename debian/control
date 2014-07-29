@@ -3,7 +3,10 @@ Section: httpd
 Priority: optional
 Maintainer: Chris Lamb <lamby@debian.org>
 Build-Depends: debhelper (>= 8), dh-python, python (>= 2.6.6-3~), python3-all
-Build-Depends-Indep: python-setuptools, python3-setuptools
+Build-Depends-Indep: help2man,
+                     python-setuptools,
+                     python-tox,
+                     python3-setuptools
 Standards-Version: 3.9.6
 Vcs-Git: git://github.com/lamby/pkg-gunicorn.git
 Vcs-Browser: https://github.com/lamby/pkg-gunicorn
@@ -117,7 +120,7 @@ Description: Event-based HTTP/WSGI server
 
 Package: gunicorn-common
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends}, ${python3:Depends}
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
