@@ -1,33 +1,34 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import re
-import imp
 import sys
 import glob
 import subprocess
 import logging
 
-from optparse import OptionParser
+from argparse import ArgumentParser
+from importlib.machinery import SourceFileLoader
 
-re_ignore = re.compile(r'(~$|^_|\.(dpkg-(old|dist|new|tmp)|example)$|\.pyc|\.comc$)')
+re_ignore = re.compile(
+    r'(~$|^_|\.(dpkg-(old|dist|new|tmp)|example)$|\.pyc|\.comc$)')
 
 def main():
-    parser = OptionParser("usage: %prog [options] start|stop|reload [configs]")
-
-    parser.add_option('--conf-dir', dest='conf_dir',
-        default='/etc/gunicorn.d')
-    parser.add_option('--pid-dir', dest='pid_dir',
-        default='/var/run/gunicorn')
-    parser.add_option('--log-dir', dest='log_dir',
-        default='/var/log/gunicorn')
-
-    parser.add_option('-v', '--verbosity', type='int', dest='verbosity',
-        default=2, help='Verbosity level; 0=minimal output, 1=normal output' \
-            ' 2=verbose output, 3=very verbose output')
-
-    options, args = parser.parse_args()
-
+    parser = ArgumentParser(
+        usage='%(prog)s [options] start|stop|reload [configs]')
+    parser.add_argument('--conf-dir', default='/etc/gunicorn.d')
+    parser.add_argument('--pid-dir', default='/var/run/gunicorn')
+    parser.add_argument('--log-dir', default='/var/log/gunicorn')
+    parser.add_argument('-v', '--verbosity',
+                        type=int, default=2,
+                        help="""Verbosity level; 0=minimal output,
+                                1=normal output  2=verbose output,
+                                3=very verbose output""")
+    parser.add_argument('action', metavar='start|stop|reload', nargs=1,
+                        help='The action to run')
+    parser.add_argument('configs', metavar='[configs]', nargs='*',
+                        help='Optional additional configuration files to load')
+    args = parser.parse_args()
     try:
         logging.basicConfig(
             format='%(levelname).1s: %(message)s',
@@ -36,31 +37,26 @@ def main():
                 1: logging.WARNING,
                 2: logging.INFO,
                 3: logging.DEBUG,
-            }[options.verbosity]
-        )
+                }[args.verbosity]
+            )
     except KeyError:
-        parser.error("Invalid verbosity level")
+        parser.error('Invalid verbosity level: {}'.format(args.verbosity))
 
     log = logging.getLogger('gunicorn-debian')
 
-    configs = args[1:]
-
-    try:
-        action = args[0]
-    except IndexError:
-        parser.error("Missing action")
-
+    assert len(args.action) == 1, 'Multiple actions: {}'.format(args.action)
+    action = args.action[0]
     if action not in ('start', 'stop', 'restart', 'reload'):
         parser.error("Invalid action: %s" % action)
 
-    files = glob.glob(os.path.join(options.conf_dir, '*'))
+    files = glob.glob(os.path.join(args.conf_dir, '*'))
 
-    if not os.path.exists(options.pid_dir):
-        log.info("Creating %s", options.pid_dir)
-        os.makedirs(options.pid_dir)
+    if not os.path.exists(args.pid_dir):
+        log.info("Creating %s", args.pid_dir)
+        os.makedirs(args.pid_dir)
 
     # Update Python path so configurations can extend each other.
-    sys.path.append(options.conf_dir)
+    sys.path.append(args.conf_dir)
 
     sys.dont_write_bytecode = True
 
@@ -71,29 +67,20 @@ def main():
             log.debug("Ignoring %s", filename)
             continue
 
-        if configs and basename not in configs:
+        if args.configs and basename not in args.configs:
             log.debug("Skipping %s", filename)
             continue
 
         log.debug("Loading %s", filename)
 
-        if sys.version_info > (2, 6):
-            # We are using a version that understands PYTHONDONTWRITEBYTECODE
-            # so it is safe to use imp.load_source here - otherwise we create
-            # "pyc"-like files in /etc/gunicorn.d which we then try and parse.
-            module = imp.load_source(filename, filename)
-            CONFIG = getattr(module, 'CONFIG', None)
-        else:
-            module = {}
-            execfile(filename, module)
-            CONFIG = module.get('CONFIG')
-
-        if not CONFIG:
+        module = SourceFileLoader(basename, filename).load_module()
+        CONFIG = getattr(module, 'CONFIG', None)
+        if CONFIG is None:
             continue
 
-        config = Config(filename, options, CONFIG, log)
+        config = Config(filename, args, CONFIG, log)
 
-        if options.verbosity < 3:
+        if args.verbosity < 3:
             config.print_name()
 
         log.debug("Calling .%s() on %s", action, config.basename())
@@ -101,8 +88,8 @@ def main():
 
     # Kill any renaming pidfiles to prevent the case where we remove or
     # renaming a configuration and it doesn't get stopped or restarted.
-    if action == 'stop' and not configs:
-        for pidfile in glob.glob(os.path.join(options.pid_dir, '*.pid')):
+    if action == 'stop' and len(args.configs) == 0:
+        for pidfile in glob.glob(os.path.join(args.pid_dir, '*.pid')):
             log.debug("Stopping extraenous pidfile %s", pidfile)
             subprocess.call((
                 'start-stop-daemon',
@@ -111,11 +98,10 @@ def main():
                 '--retry', '1',
                 '--quiet',
                 '--pidfile', pidfile,
-            ))
-
+                ))
             try:
                 os.unlink(pidfile)
-            except OSError:
+            except FileNotFoundError:
                 pass
 
     return 0
@@ -133,7 +119,7 @@ class Config(dict):
         data.setdefault('retry', '60')
         data.setdefault('environment', {})
         data.setdefault('working_dir', '/')
-        data.setdefault('python', '/usr/bin/python')
+        data.setdefault('python3', '/usr/bin/python3')
 
         self.update(data)
 
@@ -153,15 +139,16 @@ class Config(dict):
         return os.path.join(self.options.log_dir, '%s.log' % self.basename())
 
     def check_call(self, *args, **kwargs):
-        self.log.debug("Calling subprocess.check_call(*%r, **%r)", args, kwargs)
+        self.log.debug(
+            "Calling subprocess.check_call(*%r, **%r)", args, kwargs)
         subprocess.check_call(*args, **kwargs)
 
     def start(self):
         daemon = {
-            'wsgi': '/usr/bin/gunicorn',
-            'django': '/usr/bin/gunicorn_django',
-            'paster': '/usr/bin/gunicorn_paster',
-        }[self['mode']]
+            'wsgi': '/usr/bin/gunicorn3',
+            'django': '/usr/bin/gunicorn3_django',
+            'paster': '/usr/bin/gunicorn3_paster',
+            }[self['mode']]
 
         args = [
             'start-stop-daemon',
@@ -171,7 +158,7 @@ class Config(dict):
             '--chdir', self['working_dir'],
             '--pidfile', self.pidfile(),
             '--exec', self['python'], '--', daemon,
-        ]
+            ]
 
         gunicorn_args = [
             '--pid', self.pidfile(),
@@ -180,7 +167,7 @@ class Config(dict):
             '--group', self['group'],
             '--daemon',
             '--log-file', self.logfile(),
-        ]
+            ]
 
         env = os.environ.copy()
         env.update(self['environment'])
@@ -195,7 +182,7 @@ class Config(dict):
             '--quiet',
             '--retry', self['retry'],
             '--pidfile', self.pidfile(),
-        ))
+            ))
 
     def restart(self):
         self.stop()
@@ -209,7 +196,7 @@ class Config(dict):
                 '--signal', 'HUP',
                 '--quiet',
                 '--pidfile', self.pidfile(),
-            ))
+                ))
         except subprocess.CalledProcessError:
             self.log.debug("Could not reload, so restarting instead")
             self.restart()
