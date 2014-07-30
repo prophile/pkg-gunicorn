@@ -37,14 +37,16 @@ override_dh_auto_install:
 	   debian/gunicorn3/usr/bin/gunicorn3_django
 	mv debian/python3-gunicorn/usr/bin/gunicorn_paster \
 	   debian/gunicorn3/usr/bin/gunicorn3_paster
+	rmdir debian/python-gunicorn/usr/bin
 	rmdir debian/python3-gunicorn/usr/bin
 	# gaiohttp.py isn't supported in Python 2.
 	rm -f debian/python-gunicorn/usr/lib/python*/dist-packages/gunicorn/workers/gaiohttp.py
 
 override_dh_installexamples:
 	dh_installexamples
-	find debian/gunicorn-common/usr/share/doc/gunicorn-common/examples \
-		-executable -type f -print0 | xargs -0r chmod -x
+	find \
+	   debian/gunicorn-examples/usr/share/doc/gunicorn-examples/examples \
+	   -executable -type f -print0 | xargs -0r chmod -x
 
 override_dh_installinit:
 	dh_installinit --name=gunicorn
@@ -55,6 +57,10 @@ override_dh_installman:
 		 --version-string $(PKGVERSION) --no-info \
 		 -n "Control the Gunicorn daemons" \
 		 debian/gunicorn-debian
+	help2man -s 8 -o debian/tmp/gunicorn3-debian.8 \
+		 --version-string $(PKGVERSION) --no-info \
+		 -n "Control the Gunicorn daemons" \
+		 debian/gunicorn3-debian
 	dh_installman
 	# Rename the Python 3 versions.
 	mv debian/gunicorn3/usr/share/man/man1/gunicorn.1 \

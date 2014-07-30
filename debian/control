@@ -45,12 +45,13 @@ Depends: python-gunicorn (= ${binary:Version}),
          python-setuptools,
          ${misc:Depends},
          ${python:Depends}
-Suggests: python-gevent,
+Suggests: gunicorn-examples (= ${binary:Version}),
+          python-gevent,
           python-pastedeploy,
           python-setproctitle,
           python-tornado
-Provides: httpd-wsgi
 Recommends: gunicorn-common (= ${binary:Version})
+Provides: httpd-wsgi
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -98,8 +99,10 @@ Architecture: all
 Depends: python3-gunicorn (= ${binary:Version}),
          ${misc:Depends},
          ${python3:Depends}
-Suggests: python3-pastedeploy, python3-setproctitle, python3-tornado
-Recommends: gunicorn-common (= ${binary:Version})
+Suggests: gunicorn-examples (= ${binary:Version}),
+          python3-pastedeploy,
+          python3-setproctitle,
+          python3-tornado
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -118,7 +121,7 @@ Description: Event-based HTTP/WSGI server
  .
  This is the Python 3 version.
 
-Package: gunicorn-common
+Package: gunicorn-examples
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
 Description: Event-based HTTP/WSGI server
@@ -137,4 +140,4 @@ Description: Event-based HTTP/WSGI server
   * Decode chunked transfers on-the-fly, allowing upload progress notifications
     or stream-based protocols over HTTP
  .
- These are the examples and manpages.
+ These are the examples.
