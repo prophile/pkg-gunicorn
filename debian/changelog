@@ -1,5 +1,12 @@
-gunicorn (19.0-2) UNRELEASED; urgency=medium
+gunicorn (19.0-2) UNRELEASED; urgency=low
 
+  [ Chris Lamb ]
+  * Add provides: http-wsgi. Thanks to collinanderson via
+    <https://github.com/lamby/pkg-gunicorn/issues/17>.
+  * Install logrotate script. THanks to Collin Anderson <cmawebsite@gmail.com>
+    (Closes: #759279).
+
+  [ Barry Warsaw ]
   * Add Python 3 support. (Closes: #756057)
   * d/control:
     - Split the gunicorn package into separate binary packages for the
@@ -18,7 +25,7 @@ gunicorn (19.0-2) UNRELEASED; urgency=medium
   * d/gunicorn{3,-common}.manpages: Added.
   * wrap-and-sort
 
- -- Barry Warsaw <barry@debian.org>  Fri, 25 Jul 2014 17:37:29 -0400
+  -- Chris Lamb <lamby@debian.org>  Tue, 26 Aug 2014 11:43:55 +0100
 
 gunicorn (19.0-1) unstable; urgency=low
 
