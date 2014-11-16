@@ -6,7 +6,7 @@ gunicorn (19.0-2) unstable; urgency=low
     (Closes: #759279).
   * Remove /var/log/gunicorn when purging package. (Closes: #769333)
 
- -- Chris Lamb <lamby@debian.org>  Sun, 16 Nov 2014 21:12:50 +0000
+ -- Chris Lamb <lamby@debian.org>  Sun, 16 Nov 2014 21:16:00 +0000
 
 gunicorn (19.0-1) unstable; urgency=low
 
