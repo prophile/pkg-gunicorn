@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Chris Lamb <lamby@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), python (>= 2.6.6-3~)
 Build-Depends-Indep: python-setuptools
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Vcs-Git: git://github.com/lamby/pkg-gunicorn.git
 Vcs-Browser: https://github.com/lamby/pkg-gunicorn
 X-Python-Version: >= 2.6
