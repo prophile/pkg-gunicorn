@@ -4,7 +4,7 @@ POD_MANPAGES=$(wildcard debian/manpages/*.pod)
 MANPAGES=$(patsubst %.pod,%.1, $(POD_MANPAGES))
 
 %:
-	dh --with=python2 $@
+	dh $@ --with=python2
 
 %.1: %.pod
 	pod2man $< $@
