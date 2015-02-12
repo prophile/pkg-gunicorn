@@ -1,3 +1,9 @@
+gunicorn (19.0-3) UNRELEASED; urgency=medium
+
+  * Set Section to "httpd".
+
+ -- Chris Lamb <lamby@debian.org>  Thu, 12 Feb 2015 18:26:54 +0000
+
 gunicorn (19.0-2) unstable; urgency=low
 
   * Add provides: http-wsgi. Thanks to collinanderson via
