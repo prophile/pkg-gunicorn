@@ -1,2 +1,2 @@
-debian/gunicorn.d etc
 debian/gunicorn-debian usr/sbin
+debian/gunicorn.d etc

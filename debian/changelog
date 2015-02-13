@@ -3,6 +3,7 @@ gunicorn (19.0-3) UNRELEASED; urgency=medium
   * Set Section to "httpd".
   * Bump Standards-Version to 3.9.6.
   * Bump debhelper compat level to 9.
+  * Call wrap-and-sort.
 
  -- Chris Lamb <lamby@debian.org>  Thu, 12 Feb 2015 18:26:54 +0000
 
