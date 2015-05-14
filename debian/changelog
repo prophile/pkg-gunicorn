@@ -27,6 +27,7 @@ gunicorn (19.0-3) UNRELEASED; urgency=medium
 
 gunicorn (19.0-2) unstable; urgency=low
 
+  [ Chris Lamb ]
   * Add provides: http-wsgi. Thanks to collinanderson via
     <https://github.com/lamby/pkg-gunicorn/issues/17>.
   * Install logrotate script. THanks to Collin Anderson <cmawebsite@gmail.com>
