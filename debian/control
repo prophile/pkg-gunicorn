@@ -2,7 +2,7 @@ Source: gunicorn
 Section: httpd
 Priority: optional
 Maintainer: Chris Lamb <lamby@debian.org>
-Build-Depends: debhelper (>= 8), dh-python, python (>= 2.6.6-3~), python3-all
+Build-Depends: debhelper (>= 9), dh-python, python (>= 2.6.6-3~), python3-all
 Build-Depends-Indep: help2man,
                      python-setuptools,
                      python-tox,
@@ -50,7 +50,6 @@ Suggests: gunicorn-examples (= ${binary:Version}),
           python-pastedeploy,
           python-setproctitle,
           python-tornado
-Recommends: gunicorn-common (= ${binary:Version})
 Provides: httpd-wsgi
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
