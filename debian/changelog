@@ -23,6 +23,10 @@ gunicorn (19.0-3) UNRELEASED; urgency=medium
   * d/gunicorn.install -> gunicorn-common.install
   * d/gunicorn{3,-common}.manpages: Added.
   
+  [ Chris Lamb ]
+  * d/gunicorn3-debian: Minimise whitespace diff to d/gunicorn-debian for ease
+    of future changes.
+
  -- Chris Lamb <lamby@debian.org>  Thu, 12 Feb 2015 18:26:54 +0000
 
 gunicorn (19.0-2) unstable; urgency=low
