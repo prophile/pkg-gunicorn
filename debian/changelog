@@ -2,6 +2,8 @@ gunicorn (19.0-4) UNRELEASED; urgency=medium
 
   * Add entry for docs/sitemap_gen.py in debian/copyright.
     (Closes: #790314)
+  * Use system jQuery libraries to appease Lintian's
+    privacy-breach-may-use-debian-package.
 
  -- Chris Lamb <lamby@debian.org>  Sun, 28 Jun 2015 00:24:43 +0100
 
