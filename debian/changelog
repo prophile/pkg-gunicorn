@@ -1,3 +1,10 @@
+gunicorn (19.0-4) UNRELEASED; urgency=medium
+
+  * Add entry for docs/sitemap_gen.py in debian/copyright.
+    (Closes: #790314)
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 28 Jun 2015 00:24:43 +0100
+
 gunicorn (19.0-3) unstable; urgency=medium
 
   * Set Section to "httpd".
