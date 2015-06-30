@@ -123,6 +123,8 @@ Description: Event-based HTTP/WSGI server
 Package: gunicorn-examples
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
+Replaces: gunicorn (<< 19.0-2)
+Breaks: gunicorn (<< 19.0-2)
 Recommends: libjs-jquery, libjs-jquery-flot
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
