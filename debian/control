@@ -20,6 +20,8 @@ Depends: python-pkg-resources,
          python-setuptools,
          ${misc:Depends},
          ${python:Depends}
+Breaks: gunicorn (<< 19.0-3)
+Replaces: gunicorn (<< 19.0-3)
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
