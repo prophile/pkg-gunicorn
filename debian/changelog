@@ -1,9 +1,9 @@
-gunicorn (19.0-7) UNRELEASED; urgency=medium
+gunicorn (19.0-7) unstable; urgency=medium
 
   * Use a no-op dh_auto_test to disable tox tests over not exporting
     PYBUILD_TEST_TOX. (Closes: #796432)
 
- -- Chris Lamb <lamby@debian.org>  Fri, 21 Aug 2015 22:47:39 +0200
+ -- Chris Lamb <lamby@debian.org>  Fri, 21 Aug 2015 22:52:57 +0200
 
 gunicorn (19.0-6) unstable; urgency=medium
 
