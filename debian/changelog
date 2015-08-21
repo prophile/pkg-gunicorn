@@ -1,3 +1,10 @@
+gunicorn (19.0-7) UNRELEASED; urgency=medium
+
+  * Use a no-op dh_auto_test to disable tox tests over not exporting
+    PYBUILD_TEST_TOX. (Closes: #796432)
+
+ -- Chris Lamb <lamby@debian.org>  Fri, 21 Aug 2015 22:47:39 +0200
+
 gunicorn (19.0-6) unstable; urgency=medium
 
   * Correct B+R version number to 19.0-3 & add B+R to python-gunicorn. Thanks

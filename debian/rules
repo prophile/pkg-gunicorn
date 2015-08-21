@@ -7,10 +7,6 @@ PKGVERSION=$(shell dpkg-parsechangelog --show-field Version | cut -d - -f 1)
 #export DH_VERBOSE=1
 export PYBUILD_NAME=gunicorn
 
-# 2014-07-29 barry@debian.org: tox tests at build time needs more work.
-#export PYBUILD_TEST_TOX=1
-
-
 %:
 	dh $@ --with=python2,python3 --buildsystem=pybuild
 
@@ -69,3 +65,6 @@ override_dh_installman:
 	   debian/gunicorn3/usr/share/man/man1/gunicorn3_django.1
 	mv debian/gunicorn3/usr/share/man/man1/gunicorn_paster.1 \
 	   debian/gunicorn3/usr/share/man/man1/gunicorn3_paster.1
+
+override_dh_auto_test:
+	# 2014-07-29 barry@debian.org: tox tests at build time needs more work.
