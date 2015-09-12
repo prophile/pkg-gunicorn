@@ -1,3 +1,10 @@
+gunicorn (19.0-8) UNRELEASED; urgency=medium
+
+  * Drop dependency on python-tox now that tests are disabled.
+    (Closes: #798798)
+
+ -- Chris Lamb <lamby@debian.org>  Sat, 12 Sep 2015 23:34:16 +0100
+
 gunicorn (19.0-7) unstable; urgency=medium
 
   * Use a no-op dh_auto_test to disable tox tests over not exporting

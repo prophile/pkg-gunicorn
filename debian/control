@@ -5,7 +5,6 @@ Maintainer: Chris Lamb <lamby@debian.org>
 Build-Depends: debhelper (>= 9), dh-python, python (>= 2.6.6-3~), python3-all
 Build-Depends-Indep: help2man,
                      python-setuptools,
-                     python-tox,
                      python3-setuptools
 Standards-Version: 3.9.6
 Vcs-Git: git://github.com/lamby/pkg-gunicorn.git
