@@ -8,15 +8,15 @@ Subject: 0001-drop-supplemental-groups
 
 --- a/gunicorn/util.py
 +++ b/gunicorn/util.py
-@@ -4,6 +4,7 @@
- # See the NOTICE for more information.
- 
- 
+@@ -21,6 +21,7 @@ import inspect
+ import errno
+ import warnings
+ import cgi
 +import errno
- import email.utils
- import fcntl
- import io
-@@ -152,6 +153,14 @@
+ 
+ from gunicorn.errors import AppImportError
+ from gunicorn.six import text_type
+@@ -152,6 +153,14 @@ def set_owner_process(uid, gid):
          # groups like on osx or fedora
          gid = abs(gid) & 0x7FFFFFFF
          os.setgid(gid)
