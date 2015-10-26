@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 """ module used to build the django wsgi application """
+from __future__ import print_function
 
 import os
 import re
@@ -36,9 +37,9 @@ def make_wsgi_application():
     if get_validation_errors(s):
         s.seek(0)
         error = s.read()
-        sys.stderr.write("One or more models did not validate:\n%s" % error)
+        msg = "One or more models did not validate:\n%s" % error
+        print(msg, file=sys.stderr)
         sys.stderr.flush()
-
         sys.exit(1)
 
     translation.activate(settings.LANGUAGE_CODE)
@@ -50,11 +51,11 @@ def make_wsgi_application():
 def reload_django_settings():
         mod = util.import_module(os.environ['DJANGO_SETTINGS_MODULE'])
 
-        # reload module
+        # Reload module.
         reload(mod)
 
-        # reload settings.
-        # USe code from django.settings.Settings module.
+        # Reload settings.
+        # Use code from django.settings.Settings module.
 
         # Settings that should be converted into tuples if they're mistakenly entered
         # as strings.

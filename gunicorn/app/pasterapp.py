@@ -2,6 +2,7 @@
 #
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
+from __future__ import print_function
 
 import os
 import pkg_resources
@@ -20,6 +21,12 @@ from gunicorn.config import Config, get_default_config_file
 from gunicorn import util
 
 
+def _has_logging_config(paste_file):
+    cfg_parser = ConfigParser.ConfigParser()
+    cfg_parser.read([paste_file])
+    return cfg_parser.has_section('loggers')
+
+
 def paste_config(gconfig, config_url, relative_to, global_conf=None):
     # add entry to pkg_resources
     sys.path.insert(0, relative_to)
@@ -27,7 +34,7 @@ def paste_config(gconfig, config_url, relative_to, global_conf=None):
 
     config_url = config_url.split('#')[0]
     cx = loadwsgi.loadcontext(SERVER, config_url, relative_to=relative_to,
-            global_conf=global_conf)
+                              global_conf=global_conf)
     gc, lc = cx.global_conf.copy(), cx.local_conf.copy()
     cfg = {}
 
@@ -40,6 +47,11 @@ def paste_config(gconfig, config_url, relative_to, global_conf=None):
     cfg['workers'] = int(lc.get('workers', 1))
     cfg['umask'] = int(lc.get('umask', 0))
     cfg['default_proc_name'] = gc.get('__file__')
+
+    # init logging configuration
+    config_file = config_url.split(':')[1]
+    if _has_logging_config(config_file):
+        cfg.setdefault('logconfig', config_file)
 
     for k, v in gc.items():
         if k not in gconfig.settings:
@@ -112,7 +124,7 @@ class PasterServerApplication(PasterBaseApplication):
 
     def __init__(self, app, gcfg=None, host="127.0.0.1", port=None, *args, **kwargs):
         self.cfg = Config()
-        self.gcfg = gcfg # need to hold this for app_config
+        self.gcfg = gcfg  # need to hold this for app_config
         self.app = app
         self.callable = None
 
@@ -141,7 +153,7 @@ class PasterServerApplication(PasterBaseApplication):
                 if k.lower() in self.cfg.settings and v is not None:
                     self.cfg.set(k.lower(), v)
         except Exception as e:
-            sys.stderr.write("\nConfig error: %s\n" % str(e))
+            print("\nConfig error: %s" % str(e), file=sys.stderr)
             sys.stderr.flush()
             sys.exit(1)
 

@@ -9,7 +9,8 @@ import os
 import re
 import sys
 
-from gunicorn.six import unquote_to_wsgi_str, string_types, binary_type, reraise
+from gunicorn._compat import unquote_to_wsgi_str
+from gunicorn.six import string_types, binary_type, reraise
 from gunicorn import SERVER_SOFTWARE
 import gunicorn.six as six
 import gunicorn.util as util
@@ -43,7 +44,7 @@ class FileWrapper(object):
         raise IndexError
 
 
-class WSGIErrorsWraper(io.RawIOBase):
+class WSGIErrorsWrapper(io.RawIOBase):
 
     def __init__(self, cfg):
         errorlog = logging.getLogger("gunicorn.error")
@@ -69,7 +70,7 @@ class WSGIErrorsWraper(io.RawIOBase):
 
 def base_environ(cfg):
     return {
-        "wsgi.errors": WSGIErrorsWraper(cfg),
+        "wsgi.errors": WSGIErrorsWrapper(cfg),
         "wsgi.version": (1, 0),
         "wsgi.multithread": False,
         "wsgi.multiprocess": (cfg.workers > 1),
@@ -101,7 +102,7 @@ def proxy_environ(req):
     return {
         "PROXY_PROTOCOL": info["proxy_protocol"],
         "REMOTE_ADDR": info["client_addr"],
-        "REMOTE_PORT":  str(info["client_port"]),
+        "REMOTE_PORT": str(info["client_port"]),
         "PROXY_ADDR": info["proxy_addr"],
         "PROXY_PORT": str(info["proxy_port"]),
     }
@@ -159,6 +160,8 @@ def create(req, sock, client, server, cfg):
     # http://www.ietf.org/rfc/rfc3875
     if isinstance(client, string_types):
         environ['REMOTE_ADDR'] = client
+    elif isinstance(client, binary_type):
+        environ['REMOTE_ADDR'] = str(client)
     else:
         environ['REMOTE_ADDR'] = client[0]
         environ['REMOTE_PORT'] = str(client[1])
@@ -254,8 +257,8 @@ class Response(object):
 
     def process_headers(self, headers):
         for name, value in headers:
-            assert isinstance(name, string_types), "%r is not a string" % name
-
+            if not isinstance(name, string_types):
+                raise TypeError('%r is not a string' % name)
             value = str(value).strip()
             lname = name.lower().strip()
             if lname == "content-length":
@@ -319,9 +322,8 @@ class Response(object):
 
     def write(self, arg):
         self.send_headers()
-
-        assert isinstance(arg, binary_type), "%r is not a byte." % arg
-
+        if not isinstance(arg, binary_type):
+            raise TypeError('%r is not a byte' % arg)
         arglen = len(arg)
         tosend = arglen
         if self.response_length is not None:
@@ -340,6 +342,9 @@ class Response(object):
 
         self.sent += tosend
         util.write(self.sock, arg, self.chunked)
+
+    def can_sendfile(self):
+        return (self.cfg.sendfile and (sendfile is not None))
 
     def sendfile_all(self, fileno, sockno, offset, nbytes):
         # Send file in at most 1GB blocks as some operating
@@ -372,12 +377,12 @@ class Response(object):
 
             sent += len(data)
             if sent > nbytes:
-                data = data[:nbytes-sent]
+                data = data[:nbytes - sent]
 
             util.write(self.sock, data, self.chunked)
 
     def write_file(self, respiter):
-        if sendfile is not None and util.is_fileobject(respiter.filelike):
+        if self.can_sendfile() and util.is_fileobject(respiter.filelike):
             # sometimes the fileno isn't a callable
             if six.callable(respiter.filelike.fileno):
                 fileno = respiter.filelike.fileno()

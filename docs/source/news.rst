@@ -1,340 +1,99 @@
+=========
 Changelog
 =========
 
-19.0 / 2014-06-12
------------------
+19.3.0 / 2015/03/06
+===================
 
-Gunicorn 19.0 is a major release with new features and fixes. This
-version improve a lot the usage of Gunicorn with python 3 by adding `two
-new workers <http://docs.gunicorn.org/en/latest/design.html#asyncio-workers>`_ to it: `gthread` a fully threaded async worker using futures
-and `gaiohttp` a worker using asyncio.
+Changes
+-------
 
-
-Breaking Changes
-~~~~~~~~~~~~~~~~
-
-Switch QUIT and TERM signals
-++++++++++++++++++++++++++++
-
-With this change, when gunicorn receives a QUIT all the workers are
-killed immediately and exit and TERM is used for the graceful shutdown.
-
-Note: the old behaviour was based on the NGINX but the new one is more
-correct according the following doc:
-
-https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html
-
-also it is complying with the way the signals are sent by heroku:
-
-https://devcenter.heroku.com/articles/python-faq#what-constraints-exist-when-developing-applications-on-heroku
-
-Deprecations
-+++++++++++++
-
-`run_gunicorn`, `gunicorn_django` and `gunicorn_paster` are now
-completely deprecated and will be removed in the next release. Use the
-`gunicorn` command instead.
-
-
-Changes:
-~~~~~~~~
-
-core
+Core
 ++++
 
-- add aiohttp worker named `gaiohttp` using asyncio. Full async worker
-  on python 3.
-- fix HTTP-violating excess whitespace in write_error output
-- fix: try to log what happened in the worker after a timeout, add a
-  `worker_abort` hook on SIGABRT signal.
-- fix: save listener socket name in workers so we can handle buffered
-  keep-alive requests after the listener has closed.
-- add on_exit hook called just before exiting gunicorn.
-- add support for python 3.4
-- fix: do not swallow unexpected errors when reaping
-- fix: remove incompatible SSL option with python 2.6
-- add new async gthread worker and `--threads` options allows to set multiple
-  threads to listen on connection
-- deprecate `gunicorn_django` and `gunicorn_paster`
-- switch QUIT and TERM signal
-- reap workers in SIGCHLD handler
-- add universal wheel support
-- use `email.utils.formatdate` in gunicorn.util.http_date
-- deprecate the `--debug` option
-- fix: log exceptions that occur after response start …
-- allows loading of applications from `.pyc` files (#693)
-- fix: issue #691, raw_env config file parsing
-- use a dynamic timeout to wait for the optimal time. (Reduce power
-  usage)
-- fix python3 support when notifying the arbiter
-- add: honor $WEB_CONCURRENCY environment variable. Useful for heroku
-  setups.
-- add: include tz offset in access log
-- add: include access logs in the syslog handler.
-- add --reload option for code reloading
-- add the capability to load `gunicorn.base.Application` without the loading of the arguments of the command line. It allows you to [embed gunicorn in your own application](http://docs.gunicorn.org/en/latest/custom.html).
-- improve: set wsgi.multithread to True for async workers
-- fix logging: make sure to redirect wsgi.errors when needed
-- add: syslog logging can now be done to a unix socket
-- fix logging: don't try to redirect stdout/stderr to the logfile.
-- fix logging: don't propagate log
-- improve logging: file option can be overriden by the gunicorn options
-`--error-logfile` and `--access-logfile` if they are given.
-- fix: dont' override SERVER_* by the Host header
-- fix: handle_error
-- add more option to configure SSL
-- fix: sendfile with SSL
-- add: worker_int callback (to react on SIGTERM)
-- fix: don't depend on entry point for internal classes, now absolute
-  modules path can be given.
-- fix: Error messages are now encoded in latin1
-- fix: request line length check
-- improvement: proxy_allow_ips: Allow proxy protocol if "*" specified
-- fix: run worker's `setup` method  before setting num_workers
-- fix: FileWrapper inherit from `object` now
-- fix: Error messages are now encoded in latin1
-- fix: don't spam the console on SIGWINCH.
-- fix: logging -don't stringify T and D logging atoms (#621)
-- add support for the latest django version
-- deprecate `run_gunicorn` django option
-- fix: sys imported twice
+- fix: :issue:`978` make sure a listener is inheritable
+- add `check_config` class method to workers
+- fix: :issue:`983` fix select timeout in sync worker with multiple
+  connections
+- allows workers to access to the reloader. close :issue:`984`
+- raise TypeError instead of AssertionError
 
+Logging
++++++++
 
-gevent worker
+- make Logger.loglevel a classs attribute
+
+Documentation
 +++++++++++++
 
-- fix: make sure to stop all listeners
-- fix: monkey patching is now done in the worker
-- fix: "global name 'hub' is not defined"
-- fix: reinit `hub` on old versions of gevent
-- support gevent 1.0
-- fix: add subprocess in monket patching
-- fix: add support for multiple listener
+- fix: :issue:`988` fix syntax errors in examples/gunicorn_rc
 
-eventlet worker
+19.2.1 / 2015/02/4
+==================
+
+Changes
+-------
+
+Logging
++++++++
+
+- expose loglevel in the Logger class
+
+AsyncIO worker (gaiohttp)
++++++++++++++++++++++++++
+
+- fix :issue:`977` fix initial crash
+
+Documentation
++++++++++++++
+
+- document security mailing-list in the contributing page.
+
+
+19.2 / 2015/01/30
+=================
+
+Changes
+-------
+
+Core
+++++
+
+- optimize the sync workers when listening on a single interface
+- add `--sendfile` settings to enable/disable sendfile. fix :issue:`856` .
+- add the selectors module to the code base. :issue:`886`
+- fix :pr:`862` add `--max-requests-jitter` setting to set the maximum jitter to add to the
+  max-requests setting.
+- fix :issue:`899` propagate proxy_protocol_info to keep-alive requests
+- fix :issue:`863` worker timeout: dynamic timeout has been removed, fix a race
+  condition error
+- fix: Avoid world writable file
+- fix :issue:`917`: the deprecated ``--debug`` option has been removed.
+
+Logging
++++++++
+
+- fix :issue:`941`  set logconfig default to paster more trivially
+- add statsd-prefix config setting: set the prefix to use when emitting statsd
+  metrics
+- :issue:`832` log to console by default
+- fix :issue:`845`: set the gunicorn loggers from the paste config
+
+Thread Worker
++++++++++++++
+
+- fix :issue:`908` make sure the worker can continue to accept requests
+
+Eventlet Worker
 +++++++++++++++
 
-- fix: merge duplicate EventletWorker.init_process method (fixes #657)
-- fix: missing errno import for eventlet sendfile patch
-- fix: add support for multiple listener
+- fix :issue:`867` Fix eventlet shutdown to actively shut down the workers.
 
-tornado worker
-++++++++++++++
+Documentation
++++++++++++++
 
-- add gracefull stop support
-
-18.0 / 2013-08-26
------------------
-
-- new: add ``-e/--env`` command line argument to pass an environment variables to
-  gunicorn
-- new: add ``--chdir`` command line argument to specified directory
-  before apps loading.  - new: add wsgi.file_wrapper support in async workers
-- new: add ``--paste`` command line argument to set the paster config file
-- deprecated: the command ``gunicorn_django`` is now deprecated. You should now
-  run your application with the WSGI interface installed with your project (see
-  https://docs.djangoproject.com/en/1.4/howto/deployment/wsgi/gunicorn/) for
-  more infos.
-- deprecated:  the command ``gunicorn_paste`` is deprecated. You now should use
-  the new ``--paste`` argument to set the configuration file of your paster
-  application.
-- fix: Removes unmatched leading quote from the beginning of the default access
-  log format string
-- fix: null timeout
-- fix: gevent worker
-- fix: don't reload the paster app when using pserve
-- fix: after closing for error do not keep alive the connection
-- fix: responses 1xx, 204 and 304 should not force the connection to be closed
-
-17.5 / 2013-07-03
-------------------
-
-- new: add signals documentation
-- new: add post_worker_init hook for workers
-- new: try to use gunicorn.conf.py in current folder as the default
-  config file.
-- fix graceful timeout with the Eventlet worker
-- fix: don't raise an error when closing the socket if already closed
-- fix: fix --settings parameter for django application and try to find
-  the django settings when using the ``gunicorn`` command.
-- fix: give the initial global_conf to paster application
-
-New versionning:
-++++++++++++++++
-
-With this release, the versionning of Gunicorn is changing. Gunicorn is
-stable since a long time and there is no point to release a "1.0" now.
-It should have been done since a long time. 0.17 really meant it was the
-17th stable version. From the beginning we have only 2 kind of
-releases:
-
-major release: releases with major changes or huge features added
-services releases: fixes and minor features added So from now we will
-apply the following versionning ``<major>.<service>``. For example ``17.5`` is a
-service release.
-
-0.17.4 / 2013-04-24
--------------------
-
-- fix unix socket address parsing
-
-0.17.3 / 2013-04-23
--------------------
-
-- add systemd sockets support
-- add ``python -m gunicorn.app.wsgiapp`` support
-- improve logger class inheritance
-- exit when the config file isn't found
-- add the -R option to enable stdio inheritance in daemon mode
-- don't close file descriptors > 3 in daemon mode
-- improve STDOUT/STDERR logging
-- fix pythonpath option
-- fix pidfile creation on Python 3
-- fix gevent worker exit
-- fix ipv6 detection when the platform isn't supporting it
-
-0.17.2 / 2013-01-07
--------------------
-
-- optimize readline
-- make imports errors more visiblle when loading an app or a logging
-  class
-- fix tornado worker: don't pass ssl options if there are none
-- fix PEP3333: accept only bytetrings in the response body
-- fix support on CYGWIN platforms
-
-0.17.1 / 2013-01-05
--------------------
-
-- add syslog facility name setting
-- fix ``--version`` command line argument
-- fix wsgi url_scheme for https
-
-0.17.0 / 2012-12-25
--------------------
-
-- allows gunicorn to bind to multiple address
-- add SSL support
-- add syslog support
-- add nworkers_changed hook
-- add response arg for post_request hook
-- parse command line with argparse (replace deprecated optparse)
-- fix PWD detection in arbiter
-- miscellenaeous PEP8 fixes
-
-0.16.1 / 2012-11-19
--------------------
-
-- Fix packaging
-
-0.16.0 / 2012-11-19
--------------------
-
-- **Added support for Python 3.2 & 3.3**
-- Expose --pythonpath command to all gunicorn commands
-- Honor $PORT environment variable, useful for deployment on heroku
-- Removed support for Python 2.5
-- Make sure we reopen the logs on the console
-- Fix django settings module detection from path
-- Reverted timeout for client socket. Fix issue on blocking issues.
-- Fixed gevent worker
-
-0.15.0 / 2012-10-18
--------------------
-
-- new documentation site on http://docs.gunicorn.org
-- new website on http://gunicorn.org
-- add `haproxy PROXY protocol <http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt>`_ support
-- add  ForwardedAllowIPS option: allows to filter Front-end's IPs
-  allowed to handle X-Forwarded-* headers.
-- add callable hooks for paster config
-- add x-forwarded-proto as secure scheme default (Heroku is using this)
-- allows gunicorn to load a pre-compiled application
-- support file reopening & reexec for all loggers
-- initialize the logging config file with defaults.
-- set timeout for client socket (slow client DoS).
-- NoMoreData, ChunkMissingTerminator, InvalidChunkSize are now
-  IOError exceptions
-- fix graceful shutdown in gevent
-- fix limit request line check
-
-0.14.6 / 2012-07-26
--------------------
-
-
-- fix gevent & subproces
-- fix request line length check
-- fix keepalive = 0
-- fix tornado worker
-
-0.14.5 / 2012-06-24
---------------------
-
-- fix logging during daemonisation
-
-0.14.4 / 2012-06-24
--------------------
-
-- new --graceful-timeout option
-- fix multiple issues with request limit
-- more fixes in django settings resolutions
-- fix gevent.core import
-- fix keepalive=0 in eventlet worker
-- fix handle_error display with the unix worker
-- fix tornado.wsgi.WSGIApplication calling error
-
-- **breaking change**: take the control on graceful reload back.
-  graceful can't be overrided anymore using the on_reload function.
-
-0.14.3 / 2012-05-15
--------------------
-
-- improvement: performance of http.body.Body.readline()
-- improvement: log HTTP errors in access log like Apache
-- improvement: display traceback when the worker fails to boot
-- improvement: makes gunicorn work with gevent 1.0
-- examples: websocket example now supports hybi13
-- fix: reopen log files after initialization
-- fix: websockets support
-- fix: django1.4 support
-- fix: only load the paster application 1 time
-
-0.14.2 / 2012-03-16
--------------------
-
-- add validate_class validator: allows to use a class or a method to
-  initialize the app during in-code configuration
-- add support for max_requests in tornado worker
-- add support for disabling x_forwarded_for_header in tornado worker
-- gevent_wsgi is now an alias of gevent_pywsgi
-- Fix gevent_pywsgi worker
-
-0.14.1 / 2012-03-02
--------------------
-
-- fixing source archive, reducing its size
-
-0.14.0 / 2012-02-27
--------------------
-
-- check if Request line is too large: You can now pass the parameter
-  ``--limit-request-line`` or set the ``limit_request_line`` in your
-  configuration file to set the max size of the request line in bytes.
-- limit the number of headers fields and their size. Add
-  ``--limit-request-field`` and ``limit-request-field-size`` settings
-- add ``p`` variable to the log access format to log pidfile
-- add ``{HeaderName}o`` variable to the logo access format to log the
-  response header HeaderName
-- request header is now logged with the variable ``{HeaderName}i`` in the
-  access log file
-- improve error logging
-- support logging.configFile
-- support django 1.4 in both gunicorn_django & run_gunicorn command
-- improve reload in django run_gunicorn command (should just work now)
-- allows people to set the ``X-Forwarded-For`` header key and disable it by
-  setting an empty string.
-- fix support of Tornado
-- many other fixes.
+Many improvements and fixes have been done, see the detailled changelog for
+more informations.
 
 History
 =======
@@ -342,6 +101,7 @@ History
 .. toctree::
    :titlesonly:
 
+   2015-news
    2014-news
    2013-news
    2012-news

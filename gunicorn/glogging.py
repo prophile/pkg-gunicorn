@@ -65,7 +65,7 @@ CONFIG_DEFAULTS = dict(
         formatters={
             "generic": {
                 "format": "%(asctime)s [%(process)d] [%(levelname)s] %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
+                "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
                 "class": "logging.Formatter"
             }
         }
@@ -155,9 +155,10 @@ class Logger(object):
         "info": logging.INFO,
         "debug": logging.DEBUG
     }
+    loglevel = logging.INFO
 
     error_fmt = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-    datefmt = r"%Y-%m-%d %H:%M:%S"
+    datefmt = r"[%Y-%m-%d %H:%M:%S %z]"
 
     access_fmt = "%(message)s"
     syslog_fmt = "[%(process)d] %(message)s"
@@ -175,8 +176,8 @@ class Logger(object):
         self.setup(cfg)
 
     def setup(self, cfg):
-        loglevel = self.LOG_LEVELS.get(cfg.loglevel.lower(), logging.INFO)
-        self.error_log.setLevel(loglevel)
+        self.loglevel = self.LOG_LEVELS.get(cfg.loglevel.lower(), logging.INFO)
+        self.error_log.setLevel(self.loglevel)
         self.access_log.setLevel(logging.INFO)
 
         # set gunicorn.error handler
@@ -199,11 +200,14 @@ class Logger(object):
 
         if cfg.logconfig:
             if os.path.exists(cfg.logconfig):
-                fileConfig(cfg.logconfig, defaults=CONFIG_DEFAULTS,
-                        disable_existing_loggers=False)
+                defaults = CONFIG_DEFAULTS.copy()
+                defaults['__file__'] = cfg.logconfig
+                defaults['here'] = os.path.dirname(cfg.logconfig)
+                fileConfig(cfg.logconfig, defaults=defaults,
+                           disable_existing_loggers=False)
             else:
-                raise RuntimeError("Error: log config '%s' not found" %
-                        cfg.logconfig)
+                msg = "Error: log config '%s' not found"
+                raise RuntimeError(msg % cfg.logconfig)
 
     def critical(self, msg, *args, **kwargs):
         self.error_log.critical(msg, *args, **kwargs)
@@ -240,7 +244,7 @@ class Logger(object):
             'r': "%s %s %s" % (environ['REQUEST_METHOD'],
                 environ['RAW_URI'], environ["SERVER_PROTOCOL"]),
             's': status,
-            'b': resp.response_length and str(resp.response_length) or '-',
+            'b': resp.sent and str(resp.sent) or '-',
             'f': environ.get('HTTP_REFERER', '-'),
             'a': environ.get('HTTP_USER_AGENT', '-'),
             'T': request_time.seconds,
@@ -311,7 +315,7 @@ class Logger(object):
 
     def _get_gunicorn_handler(self, log):
         for h in log.handlers:
-            if getattr(h, "_gunicorn", False) == True:
+            if getattr(h, "_gunicorn", False):
                 return h
 
     def _set_handler(self, log, output, fmt):

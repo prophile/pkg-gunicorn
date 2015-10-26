@@ -1,3 +1,5 @@
+.. _configuration:
+
 ======================
 Configuration Overview
 ======================
@@ -26,7 +28,7 @@ Once again, in order of least to most authoritative:
     To check your configuration when using the command line or the
     configuration file you can run the following command::
 
-        $ gunicorn --check-config
+        $ gunicorn --check-config APP_MODULE
 
     It also allows you to know if your application can be launched.
 
@@ -80,7 +82,9 @@ let us know.
 Paster Applications
 -------------------
 
-In your INI file, you can specify to use Gunicorn as the server like such::
+In your INI file, you can specify to use Gunicorn as the server like such:
+
+.. code-block:: ini
 
     [server:main]
     use = egg:gunicorn#main

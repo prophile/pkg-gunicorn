@@ -5,7 +5,6 @@
 
 import t
 
-import functools
 import os
 import sys
 
@@ -14,6 +13,8 @@ from gunicorn.app.base import Application
 from gunicorn.workers.sync import SyncWorker
 
 dirname = os.path.dirname(__file__)
+def cfg_module():
+    return 'config.test_cfg'
 def cfg_file():
     return os.path.join(dirname, "config", "test_cfg.py")
 def paster_ini():
@@ -185,18 +186,31 @@ def test_load_config():
     t.eq(app.cfg.workers, 3)
     t.eq(app.cfg.proc_name, "fooey")
 
+def test_load_config_module():
+    with AltArgs(["prog_name", "-c", cfg_module()]):
+        app = NoConfigApp()
+    t.eq(app.cfg.bind, ["unix:/tmp/bar/baz"])
+    t.eq(app.cfg.workers, 3)
+    t.eq(app.cfg.proc_name, "fooey")
+
 def test_cli_overrides_config():
     with AltArgs(["prog_name", "-c", cfg_file(), "-b", "blarney"]):
         app = NoConfigApp()
         t.eq(app.cfg.bind, ["blarney"])
         t.eq(app.cfg.proc_name, "fooey")
 
+def test_cli_overrides_config_module():
+    with AltArgs(["prog_name", "-c", cfg_module(), "-b", "blarney"]):
+        app = NoConfigApp()
+        t.eq(app.cfg.bind, ["blarney"])
+        t.eq(app.cfg.proc_name, "fooey")
+
 def test_default_config_file():
-    default_config = os.path.join(os.path.abspath(os.getcwd()), 
+    default_config = os.path.join(os.path.abspath(os.getcwd()),
                                                   'gunicorn.conf.py')
     with open(default_config, 'w+') as default:
         default.write("bind='0.0.0.0:9090'")
-    
+
     t.eq(config.get_default_config_file(), default_config)
 
     with AltArgs(["prog_name"]):

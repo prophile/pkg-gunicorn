@@ -1,3 +1,4 @@
+.. Please update gunicorn/config.py instead.
 
 .. _settings:
 
@@ -18,7 +19,7 @@ config
 * ``-c FILE, --config FILE``
 * ``None``
 
-The path to a Gunicorn config file.
+The path to a Gunicorn config file, or python module.
 
 Only has an effect when specified on the command line or as part of an
 application specific configuration.
@@ -68,7 +69,7 @@ workers
 * ``-w INT, --workers INT``
 * ``1``
 
-The number of worker process for handling requests.
+The number of worker processes for handling requests.
 
 A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
 want to vary this a bit to find the best for your particular
@@ -144,6 +145,20 @@ to help limit the damage of memory leaks.
 
 If this is set to zero (the default) then the automatic worker
 restarts are disabled.
+
+max_requests_jitter
+~~~~~~~~~~~~~~~~~~~
+
+* ``--max-requests-jitter INT``
+* ``0``
+
+The maximum jitter to add to the max-requests setting.
+
+The jitter causes the restart per worker to be randomized by
+``randint(0, max_requests_jitter)``. This is intended to stagger worker
+restarts to avoid all workers restarting at the same time.
+
+.. versionadded:: 19.2
 
 timeout
 ~~~~~~~
@@ -229,17 +244,6 @@ on the allowed size of an HTTP request header field.
 Debugging
 ---------
 
-debug
-~~~~~
-
-* ``--debug``
-* ``False``
-
-Turn on debugging in the server.
-
-**DEPRECATED**: This no functionality was removed after v18.0.
-This option is now a no-op.
-
 reload
 ~~~~~~
 
@@ -271,7 +275,7 @@ check_config
 * ``--check-config``
 * ``False``
 
-Check the configuration..
+Check the configuration.
 
 Server Mechanics
 ----------------
@@ -289,11 +293,21 @@ speed up server boot times. Although, if you defer application loading
 to each worker process, you can reload your application code easily by
 restarting workers.
 
+sendfile
+~~~~~~~~
+
+* ``--sendfile``
+* ``True``
+
+Enables or disables the use of ``sendfile()``.
+
+.. versionadded:: 19.2
+
 chdir
 ~~~~~
 
 * ``--chdir``
-* ``/home/benoitc/work/gunicorn/env_py3/src/gunicorn/docs``
+* ``/Users/benoitc/work/gunicorn/py27/gunicorn/docs``
 
 Chdir to specified directory before apps loading.
 
@@ -346,7 +360,7 @@ user
 ~~~~
 
 * ``-u USER, --user USER``
-* ``1000``
+* ``501``
 
 Switch worker processes to run as this user.
 
@@ -358,7 +372,7 @@ group
 ~~~~~
 
 * ``-g GROUP, --group GROUP``
-* ``1000``
+* ``20``
 
 Switch worker process to run as this group.
 
@@ -396,7 +410,7 @@ temporary directory.
 secure_scheme_headers
 ~~~~~~~~~~~~~~~~~~~~~
 
-* ``{'X-FORWARDED-SSL': 'on', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-PROTOCOL': 'ssl'}``
+* ``{'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}``
 
 A dictionary containing headers and values that the front-end proxy
 uses to indicate HTTPS requests. These tell gunicorn to set
@@ -469,11 +483,14 @@ errorlog
 ~~~~~~~~
 
 * ``--error-logfile FILE, --log-file FILE``
-* ``None``
+* ``-``
 
 The Error log file to write to.
 
 "-" means log to stderr.
+
+.. versionchanged:: 19.2
+   Log to ``stderr`` by default.
 
 loglevel
 ~~~~~~~~
@@ -521,7 +538,7 @@ syslog_addr
 ~~~~~~~~~~~
 
 * ``--log-syslog-to SYSLOG_ADDR``
-* ``udp://localhost:514``
+* ``unix:///var/run/syslog``
 
 Address to send syslog messages.
 
@@ -547,7 +564,7 @@ syslog_prefix
 * ``--log-syslog-prefix SYSLOG_PREFIX``
 * ``None``
 
-makes gunicorn use the parameter as program-name in the syslog entries.
+Makes gunicorn use the parameter as program-name in the syslog entries.
 
 All entries will be prefixed by gunicorn.<prefix>. By default the program
 name is the name of the process.
@@ -572,6 +589,27 @@ Enable inheritance for stdio file descriptors in daemon mode.
 
 Note: To disable the python stdout buffering, you can to set the user
 environment variable ``PYTHONUNBUFFERED`` .
+
+statsd_host
+~~~~~~~~~~~
+
+* ``--statsd-host STATSD_ADDR``
+* ``None``
+
+``host:port`` of the statsd server to log to.
+
+.. versionadded:: 19.1
+
+statsd_prefix
+~~~~~~~~~~~~~
+
+* ``--statsd-prefix STATSD_PREFIX``
+* ````
+
+Prefix to use when emitting statsd metrics (a trailing ``.`` is added,
+if not provided).
+
+.. versionadded:: 19.2
 
 Process Naming
 --------------
@@ -727,7 +765,7 @@ worker_int
         def worker_int(worker):
             pass
 
-Called just after a worker exited on SIGINT or SIGTERM.
+Called just after a worker exited on SIGINT or SIGQUIT.
 
 The callable needs to accept one instance variable for the initialized
 Worker.
@@ -742,7 +780,7 @@ worker_abort
 
 Called when a worker received the SIGABRT signal.
 
-This call generally happen on timeout.
+This call generally happens on timeout.
 
 The callable needs to accept one instance variable for the initialized
 Worker.
@@ -837,8 +875,8 @@ proxy_protocol
 
 Enable detect PROXY protocol (PROXY mode).
 
-Allow using Http and Proxy together. It's may be useful for work with
-stunnel as https frondend and gunicorn as http server.
+Allow using Http and Proxy together. It may be useful for work with
+stunnel as https frontend and gunicorn as http server.
 
 PROXY protocol: http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
 

@@ -5,16 +5,14 @@
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
-# stdlib
-import inspect
 import ssl
 import sys
 from unittest import TestCase
 
-# gunicorn
-from gunicorn.config import KeyFile, CertFile, SSLVersion, CACerts, \
-     SuppressRaggedEOFs, DoHandshakeOnConnect, Setting, validate_bool, validate_string, \
-     validate_pos_int
+from gunicorn.config import (
+    KeyFile, CertFile, SSLVersion, CACerts, SuppressRaggedEOFs,
+    DoHandshakeOnConnect, Setting,
+)
 
 if sys.version_info >= (2, 7):
     from gunicorn.config import Ciphers
@@ -35,13 +33,13 @@ class SSLTestCase(TestCase):
         self.assertEquals(CertFile.section, 'Ssl')
         self.assertEquals(CertFile.cli, ['--certfile'])
         self.assertEquals(CertFile.default, None)
-        
+
         self.assertTrue(issubclass(SSLVersion, Setting))
         self.assertEquals(SSLVersion.name, 'ssl_version')
         self.assertEquals(SSLVersion.section, 'Ssl')
         self.assertEquals(SSLVersion.cli, ['--ssl-version'])
         self.assertEquals(SSLVersion.default, ssl.PROTOCOL_TLSv1)
-        
+
         self.assertTrue(issubclass(CACerts, Setting))
         self.assertEquals(CACerts.name, 'ca_certs')
         self.assertEquals(CACerts.section, 'Ssl')
@@ -55,7 +53,7 @@ class SSLTestCase(TestCase):
         self.assertEquals(SuppressRaggedEOFs.cli, ['--suppress-ragged-eofs'])
         self.assertEquals(SuppressRaggedEOFs.action, 'store_true')
         self.assertEquals(SuppressRaggedEOFs.default, True)
-        
+
         self.assertTrue(issubclass(DoHandshakeOnConnect, Setting))
         self.assertEquals(DoHandshakeOnConnect.name, 'do_handshake_on_connect')
         self.assertEquals(DoHandshakeOnConnect.section, 'Ssl')
@@ -65,7 +63,7 @@ class SSLTestCase(TestCase):
 
 
         if sys.version_info >= (2, 7):
-            self.assertTrue(issubclass(Ciphers, Setting))        
+            self.assertTrue(issubclass(Ciphers, Setting))
             self.assertEquals(Ciphers.name, 'ciphers')
             self.assertEquals(Ciphers.section, 'Ssl')
             self.assertEquals(Ciphers.cli, ['--ciphers'])
