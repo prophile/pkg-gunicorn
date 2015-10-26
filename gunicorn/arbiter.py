@@ -2,6 +2,7 @@
 #
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
+from __future__ import print_function
 
 import errno
 import os
@@ -43,7 +44,7 @@ class Arbiter(object):
 
     # I love dynamic languages
     SIG_QUEUE = []
-    SIGNALS = [getattr(signal, "SIG%s" % x) \
+    SIGNALS = [getattr(signal, "SIG%s" % x)
             for x in "HUP QUIT INT TERM TTIN TTOU USR1 USR2 WINCH".split()]
     SIG_NAMES = dict(
         (getattr(signal, name), name[3:].lower()) for name in dir(signal)
@@ -132,6 +133,10 @@ class Arbiter(object):
         self.log.debug("Arbiter booted")
         self.log.info("Listening at: %s (%s)", listeners_str, self.pid)
         self.log.info("Using worker: %s", self.cfg.worker_class_str)
+
+        # check worker class requirements
+        if hasattr(self.worker_class, "check_config"):
+            self.worker_class.check_config(self.cfg, self.log)
 
         self.cfg.when_ready(self)
 
@@ -229,7 +234,7 @@ class Arbiter(object):
         raise StopIteration
 
     def handle_quit(self):
-        "SIGTERM handling"
+        "SIGQUIT handling"
         self.stop(False)
         raise StopIteration
 
@@ -256,8 +261,8 @@ class Arbiter(object):
         SIGUSR1 handling.
         Kill all workers by sending them a SIGUSR1
         """
-        self.kill_workers(signal.SIGUSR1)
         self.log.reopen_files()
+        self.kill_workers(signal.SIGUSR1)
 
     def handle_usr2(self):
         """\
@@ -273,7 +278,7 @@ class Arbiter(object):
         if self.cfg.daemon:
             self.log.info("graceful stop of workers")
             self.num_workers = 0
-            self.kill_workers(signal.SIGQUIT)
+            self.kill_workers(signal.SIGTERM)
         else:
             self.log.debug("SIGWINCH ignored. Not daemonized")
 
@@ -303,16 +308,8 @@ class Arbiter(object):
         Sleep until PIPE is readable or we timeout.
         A readable PIPE means a signal occurred.
         """
-        if self.WORKERS:
-            worker_values = list(self.WORKERS.values())
-            oldest = min(w.tmp.last_update() for w in worker_values)
-            timeout = self.timeout - (time.time() - oldest)
-            # The timeout can be reached, so don't wait for a negative value
-            timeout = max(timeout, 1.0)
-        else:
-            timeout = 1.0
         try:
-            ready = select.select([self.PIPE[0]], [], [], timeout)
+            ready = select.select([self.PIPE[0]], [], [], 1.0)
             if not ready[0]:
                 return
             while os.read(self.PIPE[0], 1):
@@ -338,9 +335,12 @@ class Arbiter(object):
         if not graceful:
             sig = signal.SIGQUIT
         limit = time.time() + self.cfg.graceful_timeout
+        # instruct the workers to exit
+        self.kill_workers(sig)
+        # wait until the graceful timeout
         while self.WORKERS and time.time() < limit:
-            self.kill_workers(sig)
             time.sleep(0.1)
+
         self.kill_workers(signal.SIGKILL)
 
     def reexec(self):
@@ -480,13 +480,18 @@ class Arbiter(object):
         workers = sorted(workers, key=lambda w: w[1].age)
         while len(workers) > self.num_workers:
             (pid, _) = workers.pop(0)
-            self.kill_worker(pid, signal.SIGQUIT)
+            self.kill_worker(pid, signal.SIGTERM)
+
+        self.log.debug("{0} workers".format(len(workers)),
+                       extra={"metric": "gunicorn.workers",
+                              "value": len(workers),
+                              "mtype": "gauge"})
 
     def spawn_worker(self):
         self.worker_age += 1
         worker = self.worker_class(self.worker_age, self.pid, self.LISTENERS,
-                                    self.app, self.timeout / 2.0,
-                                    self.cfg, self.log)
+                                   self.app, self.timeout / 2.0,
+                                   self.cfg, self.log)
         self.cfg.pre_fork(self, worker)
         pid = os.fork()
         if pid != 0:
@@ -506,8 +511,7 @@ class Arbiter(object):
         except AppImportError as e:
             self.log.debug("Exception while loading the application: \n%s",
                     traceback.format_exc())
-
-            sys.stderr.write("%s\n" % e)
+            print("%s" % e, file=sys.stderr)
             sys.stderr.flush()
             sys.exit(self.APP_LOAD_ERROR)
         except:

@@ -3,6 +3,7 @@
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
+from __future__ import print_function
 
 import email.utils
 import fcntl
@@ -70,8 +71,8 @@ except ImportError:
             try:
                 dot = package.rindex('.', 0, dot)
             except ValueError:
-                raise ValueError("attempted relative import beyond top-level "
-                                  "package")
+                msg = "attempted relative import beyond top-level package"
+                raise ValueError(msg)
         return "%s.%s" % (package[:dot], name)
 
     def import_module(name, package=None):
@@ -112,8 +113,8 @@ def load_class(uri, default="gunicorn.workers.sync.SyncWorker",
             return pkg_resources.load_entry_point(dist, section, name)
         except:
             exc = traceback.format_exc()
-            raise RuntimeError("class uri %r invalid or not found: \n\n[%s]" % (uri,
-                exc))
+            msg = "class uri %r invalid or not found: \n\n[%s]"
+            raise RuntimeError(msg % (uri, exc))
     else:
         components = uri.split('.')
         if len(components) == 1:
@@ -130,8 +131,8 @@ def load_class(uri, default="gunicorn.workers.sync.SyncWorker",
                                 section, uri)
                 except:
                     exc = traceback.format_exc()
-                    raise RuntimeError("class uri %r invalid or not found: \n\n[%s]" % (uri,
-                        exc))
+                    msg = "class uri %r invalid or not found: \n\n[%s]"
+                    raise RuntimeError(msg % (uri, exc))
 
         klass = components.pop(-1)
 
@@ -139,9 +140,8 @@ def load_class(uri, default="gunicorn.workers.sync.SyncWorker",
             mod = import_module('.'.join(components))
         except:
             exc = traceback.format_exc()
-            raise RuntimeError(
-                    "class uri %r invalid or not found: \n\n[%s]" %
-                    (uri, exc))
+            msg = "class uri %r invalid or not found: \n\n[%s]"
+            raise RuntimeError(msg % (uri, exc))
         return getattr(mod, klass)
 
 
@@ -215,7 +215,7 @@ def is_ipv6(addr):
         socket.inet_pton(socket.AF_INET6, addr)
     except socket.error:  # not a valid address
         return False
-    except ValueError: # ipv6 not supported on this platform
+    except ValueError:  # ipv6 not supported on this platform
         return False
     return True
 
@@ -229,7 +229,6 @@ def parse_address(netloc, default_port=8000):
 
     if netloc.startswith("tcp://"):
         netloc = netloc.split("tcp://")[1]
-
 
     # get host
     if '[' in netloc and ']' in netloc:
@@ -356,8 +355,8 @@ def import_app(module):
         __import__(module)
     except ImportError:
         if module.endswith(".py") and os.path.exists(module):
-            raise ImportError("Failed to find application, did "
-                "you mean '%s:%s'?" % (module.rsplit(".", 1)[0], obj))
+            msg = "Failed to find application, did you mean '%s:%s'?"
+            raise ImportError(msg % (module.rsplit(".", 1)[0], obj))
         else:
             raise
 
@@ -407,7 +406,7 @@ def daemonize(enable_stdio_inheritance=False):
     Standard daemonization of a process.
     http://www.svbug.com/documentation/comp.unix.programmer-FAQ/faq_2.html#SEC16
     """
-    if not 'GUNICORN_FD' in os.environ:
+    if 'GUNICORN_FD' not in os.environ:
         if os.fork():
             os._exit(0)
         os.setsid()
@@ -415,7 +414,7 @@ def daemonize(enable_stdio_inheritance=False):
         if os.fork():
             os._exit(0)
 
-        os.umask(0)
+        os.umask(0o22)
 
         # In both the following any file descriptors above stdin
         # stdout and stderr are left untouched. The inheritence
@@ -504,7 +503,8 @@ def to_bytestring(value):
     """Converts a string argument to a byte string"""
     if isinstance(value, bytes):
         return value
-    assert isinstance(value, text_type)
+    if not isinstance(value, text_type):
+        raise TypeError('%r is not a string' % value)
     return value.encode("utf-8")
 
 
@@ -515,20 +515,20 @@ def is_fileobject(obj):
     # check BytesIO case and maybe others
     try:
         obj.fileno()
-    except io.UnsupportedOperation:
+    except (IOError, io.UnsupportedOperation):
         return False
 
     return True
 
 
 def warn(msg):
-    sys.stderr.write("!!!\n")
+    print("!!!", file=sys.stderr)
 
     lines = msg.splitlines()
     for i, line in enumerate(lines):
         if i == 0:
             line = "WARNING: %s" % line
-        sys.stderr.write("!!! %s\n" % line)
+        print("!!! %s" % line, file=sys.stderr)
 
-    sys.stderr.write("!!!\n\n")
+    print("!!!\n", file=sys.stderr)
     sys.stderr.flush()

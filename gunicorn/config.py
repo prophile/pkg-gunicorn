@@ -3,12 +3,14 @@
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
+# Please remember to run "make -C docs html" after update "desc" attributes.
+
 import copy
 import grp
 import inspect
 try:
     import argparse
-except ImportError: # python 2.6
+except ImportError:  # python 2.6
     from . import argparse_compat as argparse
 import os
 import pwd
@@ -17,6 +19,7 @@ import sys
 import textwrap
 
 from gunicorn import __version__
+from gunicorn import _compat
 from gunicorn.errors import ConfigError
 from gunicorn import six
 from gunicorn import util
@@ -73,7 +76,7 @@ class Config(object):
         parser = argparse.ArgumentParser(**kwargs)
         parser.add_argument("-v", "--version",
                 action="version", default=argparse.SUPPRESS,
-                version="%(prog)s (version " +  __version__ + ")\n",
+                version="%(prog)s (version " + __version__ + ")\n",
                 help="show program's version number and exit")
         parser.add_argument("args", nargs="*", help=argparse.SUPPRESS)
 
@@ -118,7 +121,7 @@ class Config(object):
     @property
     def address(self):
         s = self.settings['bind'].get()
-        return [util.parse_address(six.bytes_to_str(bind)) for bind in s]
+        return [util.parse_address(_compat.bytes_to_str(bind)) for bind in s]
 
     @property
     def uid(self):
@@ -143,7 +146,12 @@ class Config(object):
             # support the default
             uri = "gunicorn.glogging.Logger"
 
-        logger_class = util.load_class(uri,
+        # if statsd is on, automagically switch to the statsd logger
+        if 'statsd_host' in self.settings and self.settings['statsd_host'].value is not None:
+            logger_class = util.load_class("gunicorn.instrument.statsd.Statsd",
+                section="gunicorn.loggers")
+        else:
+            logger_class = util.load_class(uri,
                 default="gunicorn.glogging.Logger",
                 section="gunicorn.loggers")
 
@@ -172,7 +180,7 @@ class Config(object):
             return env
 
         for e in raw_env:
-            s = six.bytes_to_str(e)
+            s = _compat.bytes_to_str(e)
             try:
                 k, v = s.split('=', 1)
             except ValueError:
@@ -219,8 +227,6 @@ class Setting(object):
     nargs = None
     const = None
 
-
-
     def __init__(self):
         if self.default is not None:
             self.set(self.default)
@@ -262,7 +268,8 @@ class Setting(object):
         return self.value
 
     def set(self, val):
-        assert six.callable(self.validator), "Invalid validator: %s" % self.name
+        if not six.callable(self.validator):
+            raise TypeError('Invalid validator: %s' % self.name)
         self.value = self.validator(val)
 
     def __lt__(self, other):
@@ -427,7 +434,7 @@ def validate_file(val):
     # valid if the value is a string
     val = validate_string(val)
 
-     # transform relative paths
+    # transform relative paths
     path = os.path.abspath(os.path.normpath(os.path.join(util.getcwd(), val)))
 
     # test if the path exists
@@ -436,6 +443,15 @@ def validate_file(val):
 
     return path
 
+def validate_hostport(val):
+    val = validate_string(val)
+    if val is None:
+        return None
+    elements = val.split(":")
+    if len(elements) == 2:
+        return (elements[0], int(elements[1]))
+    else:
+        raise TypeError("Value must consist of: hostname:port")
 
 def get_default_config_file():
     config_path = os.path.join(os.path.abspath(os.getcwd()),
@@ -445,7 +461,6 @@ def get_default_config_file():
     return None
 
 
-# Please remember to run "make html" in docs/ after update "desc" attributes.
 class ConfigFile(Setting):
     name = "config"
     section = "Config File"
@@ -454,7 +469,7 @@ class ConfigFile(Setting):
     validator = validate_string
     default = None
     desc = """\
-        The path to a Gunicorn config file.
+        The path to a Gunicorn config file, or python module.
 
         Only has an effect when specified on the command line or as part of an
         application specific configuration.
@@ -517,7 +532,7 @@ class Workers(Setting):
     type = int
     default = int(os.environ.get('WEB_CONCURRENCY', 1))
     desc = """\
-        The number of worker process for handling requests.
+        The number of worker processes for handling requests.
 
         A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
         want to vary this a bit to find the best for your particular
@@ -611,6 +626,25 @@ class MaxRequests(Setting):
 
         If this is set to zero (the default) then the automatic worker
         restarts are disabled.
+        """
+
+
+class MaxRequestsJitter(Setting):
+    name = "max_requests_jitter"
+    section = "Worker Processes"
+    cli = ["--max-requests-jitter"]
+    meta = "INT"
+    validator = validate_pos_int
+    type = int
+    default = 0
+    desc = """\
+        The maximum jitter to add to the max-requests setting.
+
+        The jitter causes the restart per worker to be randomized by
+        ``randint(0, max_requests_jitter)``. This is intended to stagger worker
+        restarts to avoid all workers restarting at the same time.
+
+        .. versionadded:: 19.2
         """
 
 
@@ -722,21 +756,6 @@ class LimitRequestFieldSize(Setting):
         """
 
 
-class Debug(Setting):
-    name = "debug"
-    section = "Debugging"
-    cli = ["--debug"]
-    validator = validate_bool
-    action = "store_true"
-    default = False
-    desc = """\
-        Turn on debugging in the server.
-
-        **DEPRECATED**: This no functionality was removed after v18.0.
-        This option is now a no-op.
-        """
-
-
 class Reload(Setting):
     name = "reload"
     section = 'Debugging'
@@ -778,7 +797,7 @@ class ConfigCheck(Setting):
     action = "store_true"
     default = False
     desc = """\
-        Check the configuration..
+        Check the configuration.
         """
 
 
@@ -798,6 +817,18 @@ class PreloadApp(Setting):
         restarting workers.
         """
 
+class Sendfile(Setting):
+    name = "sendfile"
+    section = "Server Mechanics"
+    cli = ["--sendfile"]
+    validator = validate_bool
+    action = "store_true"
+    default = True
+    desc = """\
+        Enables or disables the use of ``sendfile()``.
+
+        .. versionadded:: 19.2
+        """
 
 class Chdir(Setting):
     name = "chdir"
@@ -1033,11 +1064,15 @@ class ErrorLog(Setting):
     cli = ["--error-logfile", "--log-file"]
     meta = "FILE"
     validator = validate_string
-    default = None
+    default = '-'
     desc = """\
         The Error log file to write to.
 
         "-" means log to stderr.
+
+        .. versionchanged:: 19.2
+           Log to ``stderr`` by default.
+
         """
 
 
@@ -1145,7 +1180,7 @@ class SyslogPrefix(Setting):
     validator = validate_string
     default = None
     desc = """\
-    makes gunicorn use the parameter as program-name in the syslog entries.
+    Makes gunicorn use the parameter as program-name in the syslog entries.
 
     All entries will be prefixed by gunicorn.<prefix>. By default the program
     name is the name of the process.
@@ -1178,6 +1213,35 @@ class EnableStdioInheritance(Setting):
 
     Note: To disable the python stdout buffering, you can to set the user
     environment variable ``PYTHONUNBUFFERED`` .
+    """
+
+
+# statsD monitoring
+class StatsdHost(Setting):
+    name = "statsd_host"
+    section = "Logging"
+    cli = ["--statsd-host"]
+    meta = "STATSD_ADDR"
+    default = None
+    validator = validate_hostport
+    desc = """\
+    ``host:port`` of the statsd server to log to.
+
+    .. versionadded:: 19.1
+    """
+
+class StatsdPrefix(Setting):
+    name = "statsd_prefix"
+    section = "Logging"
+    cli = ["--statsd-prefix"]
+    meta = "STATSD_PREFIX"
+    default = ""
+    validator = validate_string
+    desc = """\
+    Prefix to use when emitting statsd metrics (a trailing ``.`` is added,
+    if not provided).
+
+    .. versionadded:: 19.2
     """
 
 
@@ -1369,7 +1433,7 @@ class WorkerInt(Setting):
 
     default = staticmethod(worker_int)
     desc = """\
-        Called just after a worker exited on SIGINT or SIGTERM.
+        Called just after a worker exited on SIGINT or SIGQUIT.
 
         The callable needs to accept one instance variable for the initialized
         Worker.
@@ -1389,7 +1453,7 @@ class WorkerAbort(Setting):
     desc = """\
         Called when a worker received the SIGABRT signal.
 
-        This call generally happen on timeout.
+        This call generally happens on timeout.
 
         The callable needs to accept one instance variable for the initialized
         Worker.
@@ -1508,8 +1572,8 @@ class ProxyProtocol(Setting):
     desc = """\
         Enable detect PROXY protocol (PROXY mode).
 
-        Allow using Http and Proxy together. It's may be useful for work with
-        stunnel as https frondend and gunicorn as http server.
+        Allow using Http and Proxy together. It may be useful for work with
+        stunnel as https frontend and gunicorn as http server.
 
         PROXY protocol: http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
 

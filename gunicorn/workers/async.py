@@ -38,12 +38,17 @@ class AsyncWorker(base.Worker):
                     self.handle_request(listener_name, req, client, addr)
                 else:
                     # keepalive loop
+                    proxy_protocol_info = {}
                     while True:
                         req = None
                         with self.timeout_ctx():
                             req = six.next(parser)
                         if not req:
                             break
+                        if req.proxy_protocol_info:
+                            proxy_protocol_info = req.proxy_protocol_info
+                        else:
+                            req.proxy_protocol_info = proxy_protocol_info
                         self.handle_request(listener_name, req, client, addr)
             except http.errors.NoMoreData as e:
                 self.log.debug("Ignored premature client disconnection. %s", e)
@@ -114,6 +119,12 @@ class AsyncWorker(base.Worker):
                     respiter.close()
             if resp.should_close():
                 raise StopIteration()
+        except StopIteration:
+            raise
+        except socket.error:
+            # If the original exception was a socket.error we delegate
+            # handling it to the caller (where handle() might ignore it)
+            six.reraise(*sys.exc_info())
         except Exception:
             if resp and resp.headers_sent:
                 # If the requests have already been sent, we should close the

@@ -7,14 +7,17 @@ from datetime import datetime
 import os
 import signal
 import sys
+import time
+from random import randint
 
 
 from gunicorn import util
 from gunicorn.workers.workertmp import WorkerTmp
 from gunicorn.reloader import Reloader
-from gunicorn.http.errors import InvalidHeader, InvalidHeaderName, \
-InvalidRequestLine, InvalidRequestMethod, InvalidHTTPVersion, \
-LimitRequestLine, LimitRequestHeaders
+from gunicorn.http.errors import (
+    InvalidHeader, InvalidHeaderName, InvalidRequestLine, InvalidRequestMethod,
+    InvalidHTTPVersion, LimitRequestLine, LimitRequestHeaders,
+)
 from gunicorn.http.errors import InvalidProxyLine, ForbiddenProxyRequest
 from gunicorn.http.wsgi import default_environ, Response
 from gunicorn.six import MAXSIZE
@@ -22,7 +25,7 @@ from gunicorn.six import MAXSIZE
 
 class Worker(object):
 
-    SIGNALS = [getattr(signal, "SIG%s" % x) \
+    SIGNALS = [getattr(signal, "SIG%s" % x)
             for x in "ABRT HUP QUIT INT TERM USR1 USR2 WINCH CHLD".split()]
 
     PIPE = []
@@ -41,9 +44,11 @@ class Worker(object):
         self.cfg = cfg
         self.booted = False
         self.aborted = False
+        self.reloader = None
 
         self.nr = 0
-        self.max_requests = cfg.max_requests or MAXSIZE
+        jitter = randint(0, cfg.max_requests_jitter)
+        self.max_requests = cfg.max_requests + jitter or MAXSIZE
         self.alive = True
         self.log = log
         self.tmp = WorkerTmp(cfg)
@@ -83,9 +88,8 @@ class Worker(object):
         if self.cfg.reload:
             def changed(fname):
                 self.log.info("Worker reloading: %s modified", fname)
-                os.kill(self.pid, signal.SIGTERM)
-                raise SystemExit()
-            Reloader(callback=changed).start()
+                os.kill(self.pid, signal.SIGQUIT)
+            self.reloader = Reloader(callback=changed).start()
 
         # set environment' variables
         if self.cfg.env:
@@ -130,10 +134,10 @@ class Worker(object):
         signal.signal(signal.SIGUSR1, self.handle_usr1)
         signal.signal(signal.SIGABRT, self.handle_abort)
 
-        # Don't let SIGQUIT and SIGUSR1 disturb active requests
+        # Don't let SIGTERM and SIGUSR1 disturb active requests
         # by interrupting system calls
         if hasattr(signal, 'siginterrupt'):  # python >= 2.6
-            signal.siginterrupt(signal.SIGQUIT, False)
+            signal.siginterrupt(signal.SIGTERM, False)
             signal.siginterrupt(signal.SIGUSR1, False)
 
     def handle_usr1(self, sig, frame):
@@ -141,11 +145,12 @@ class Worker(object):
 
     def handle_exit(self, sig, frame):
         self.alive = False
-        # worker_int callback
-        self.cfg.worker_int(self)
 
     def handle_quit(self, sig, frame):
         self.alive = False
+        # worker_int callback
+        self.cfg.worker_int(self)
+        time.sleep(0.1)
         sys.exit(0)
 
     def handle_abort(self, sig, frame):
@@ -157,9 +162,9 @@ class Worker(object):
         request_start = datetime.now()
         addr = addr or ('', -1)  # unix socket case
         if isinstance(exc, (InvalidRequestLine, InvalidRequestMethod,
-            InvalidHTTPVersion, InvalidHeader, InvalidHeaderName,
-            LimitRequestLine, LimitRequestHeaders,
-            InvalidProxyLine, ForbiddenProxyRequest,)):
+                InvalidHTTPVersion, InvalidHeader, InvalidHeaderName,
+                LimitRequestLine, LimitRequestHeaders,
+                InvalidProxyLine, ForbiddenProxyRequest)):
 
             status_int = 400
             reason = "Bad Request"
@@ -185,11 +190,8 @@ class Worker(object):
                 mesg = "Request forbidden"
                 status_int = 403
 
-            self.log.debug("Invalid request from ip={ip}: {error}"\
-                           "".format(ip=addr[0],
-                                     error=str(exc),
-                                    )
-                          )
+            msg = "Invalid request from ip={ip}: {error}"
+            self.log.debug(msg.format(ip=addr[0], error=str(exc)))
         else:
             self.log.exception("Error handling request")
 

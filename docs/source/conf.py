@@ -2,7 +2,10 @@
 #
 # Gunicorn documentation build configuration file
 #
-import sys, os
+
+import os
+import sys
+import time
 
 DOCS_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,7 +22,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Gunicorn'
-copyright = u'2012, Benoit Chesneau'
+copyright = u'2009-%s, Benoit Chesneau' % time.strftime('%Y')
 # gunicorn version
 import gunicorn
 release = version = gunicorn.__version__
@@ -68,4 +71,3 @@ texinfo_documents = [
    u'Benoit Chesneau', 'Gunicorn', 'One line description of project.',
    'Miscellaneous'),
 ]
-

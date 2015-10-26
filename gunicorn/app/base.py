@@ -2,16 +2,17 @@
 #
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
+from __future__ import print_function
 
 import os
 import sys
 import traceback
 
+from gunicorn._compat import execfile_
 from gunicorn import util
 from gunicorn.arbiter import Arbiter
 from gunicorn.config import Config, get_default_config_file
 from gunicorn import debug
-from gunicorn.six import execfile_
 
 class BaseApplication(object):
     """
@@ -34,7 +35,7 @@ class BaseApplication(object):
             self.load_default_config()
             self.load_config()
         except Exception as e:
-            sys.stderr.write("\nError: %s\n" % str(e))
+            print("\nError: %s" % str(e), file=sys.stderr)
             sys.stderr.flush()
             sys.exit(1)
 
@@ -70,16 +71,14 @@ class BaseApplication(object):
         try:
             Arbiter(self).run()
         except RuntimeError as e:
-            sys.stderr.write("\nError: %s\n\n" % e)
+            print("\nError: %s\n" % e, file=sys.stderr)
             sys.stderr.flush()
             sys.exit(1)
 
 class Application(BaseApplication):
-    def load_config_from_file(self, filename):
-        """
-        Loads the configuration file: the file is a python file, otherwise raise an RuntimeError
-        Exception or stop the process if the configuration file contains a syntax error.
-        """
+
+    def get_config_from_filename(self, filename):
+
         if not os.path.exists(filename):
             raise RuntimeError("%r doesn't exist" % filename)
 
@@ -93,9 +92,26 @@ class Application(BaseApplication):
         try:
             execfile_(filename, cfg, cfg)
         except Exception:
-            print("Failed to read config file: %s" % filename)
+            print("Failed to read config file: %s" % filename, file=sys.stderr)
             traceback.print_exc()
+            sys.stderr.flush()
             sys.exit(1)
+
+        return cfg
+
+    def get_config_from_module_name(self, module_name):
+        return util.import_module(module_name).__dict__
+
+    def load_config_from_module_name_or_filename(self, location):
+        """
+        Loads the configuration file: the file is a python file, otherwise raise an RuntimeError
+        Exception or stop the process if the configuration file contains a syntax error.
+        """
+
+        try:
+            cfg = self.get_config_from_module_name(module_name=location)
+        except ImportError:
+            cfg = self.get_config_from_filename(filename=location)
 
         for k, v in cfg.items():
             # Ignore unknown names
@@ -104,10 +120,16 @@ class Application(BaseApplication):
             try:
                 self.cfg.set(k.lower(), v)
             except:
-                sys.stderr.write("Invalid value for %s: %s\n\n" % (k, v))
+                print("Invalid value for %s: %s\n" % (k, v), file=sys.stderr)
+                sys.stderr.flush()
                 raise
 
         return cfg
+
+    def load_config_from_file(self, filename):
+        return self.load_config_from_module_name_or_filename(
+            location=filename
+        )
 
     def load_config(self):
         # parse console args
@@ -143,7 +165,8 @@ class Application(BaseApplication):
             try:
                 self.load()
             except:
-                sys.stderr.write("\nError while loading the application:\n\n")
+                msg = "\nError while loading the application:\n"
+                print(msg, file=sys.stderr)
                 traceback.print_exc()
                 sys.stderr.flush()
                 sys.exit(1)

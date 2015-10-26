@@ -8,7 +8,7 @@
 #
 # Single quoting is generally necessary for shell escape semantics.
 #
-# This file is part of gunicorn released under the MIT license. 
+# This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
 
 def load(arg):
@@ -16,10 +16,9 @@ def load(arg):
         data = 'Hello, %s!\n' % arg
         status = '200 OK'
         response_headers = [
-            ('Content-type','text/plain'),
+            ('Content-type', 'text/plain'),
             ('Content-Length', str(len(data)))
         ]
         start_response(status, response_headers)
         return iter([data])
     return app
-
