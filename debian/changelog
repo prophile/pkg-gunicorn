@@ -1,8 +1,9 @@
-gunicorn (19.0-9) UNRELEASED; urgency=medium
+gunicorn (19.3-1) UNRELEASED; urgency=medium
 
+  * New upstream release (Closes: #803086)
   * Update debian/watch to not use deprecated githubredir.
 
- -- Chris Lamb <lamby@debian.org>  Mon, 26 Oct 2015 20:48:50 +0000
+ -- Chris Lamb <lamby@debian.org>  Mon, 26 Oct 2015 21:22:00 +0000
 
 gunicorn (19.0-8) unstable; urgency=medium
 
