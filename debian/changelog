@@ -3,6 +3,7 @@ gunicorn (19.3-1) UNRELEASED; urgency=medium
   * New upstream release (Closes: #803086)
   * Update debian/watch to not use deprecated githubredir.
   * Refresh 0001-drop-supplemental-groups.patch.
+  * Refresh 0002-use-system-js-libs.patch.
 
  -- Chris Lamb <lamby@debian.org>  Mon, 26 Oct 2015 21:22:00 +0000
 
