@@ -36,7 +36,7 @@ override_dh_auto_install:
 	rmdir debian/python-gunicorn/usr/bin
 	rmdir debian/python3-gunicorn/usr/bin
 	# gaiohttp.py isn't supported in Python 2.
-	rm -f debian/python-gunicorn/usr/lib/python*/dist-packages/gunicorn/workers/gaiohttp.py
+	rm -f debian/python-gunicorn/usr/lib/python*/dist-packages/gunicorn/workers/_gaiohttp.py
 
 override_dh_installexamples:
 	dh_installexamples
