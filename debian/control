@@ -2,10 +2,15 @@ Source: gunicorn
 Section: httpd
 Priority: optional
 Maintainer: Chris Lamb <lamby@debian.org>
-Build-Depends: debhelper (>= 9), dh-python, python (>= 2.6.6-3~), python3-all
-Build-Depends-Indep: help2man,
-                     python-setuptools,
-                     python3-setuptools
+Build-Depends:
+ debhelper (>= 9),
+ dh-python,
+ python (>= 2.6.6-3~),
+ python3-all
+Build-Depends-Indep:
+ help2man,
+ python-setuptools,
+ python3-setuptools
 Standards-Version: 3.9.6
 Vcs-Git: git://github.com/lamby/pkg-gunicorn.git
 Vcs-Browser: https://github.com/lamby/pkg-gunicorn
@@ -15,12 +20,15 @@ Homepage: http://gunicorn.org/
 
 Package: python-gunicorn
 Architecture: all
-Depends: python-pkg-resources,
-         python-setuptools,
-         ${misc:Depends},
-         ${python:Depends}
-Breaks: gunicorn (<< 19.0-3)
-Replaces: gunicorn (<< 19.0-3)
+Depends:
+ python-pkg-resources,
+ python-setuptools,
+ ${misc:Depends},
+ ${python:Depends}
+Breaks:
+ gunicorn (<< 19.0-3)
+Replaces:
+ gunicorn (<< 19.0-3)
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -41,17 +49,20 @@ Description: Event-based HTTP/WSGI server
 
 Package: gunicorn
 Architecture: all
-Depends: python-gunicorn (= ${binary:Version}),
-         python-pkg-resources,
-         python-setuptools,
-         ${misc:Depends},
-         ${python:Depends}
-Suggests: gunicorn-examples (= ${binary:Version}),
-          python-gevent,
-          python-pastedeploy,
-          python-setproctitle,
-          python-tornado
-Provides: httpd-wsgi
+Depends:
+ python-gunicorn (= ${binary:Version}),
+ python-pkg-resources,
+ python-setuptools,
+ ${misc:Depends},
+ ${python:Depends}
+Suggests:
+ gunicorn-examples (= ${binary:Version}),
+ python-gevent,
+ python-pastedeploy,
+ python-setproctitle,
+ python-tornado
+Provides:
+ httpd-wsgi
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -72,10 +83,11 @@ Description: Event-based HTTP/WSGI server
 
 Package: python3-gunicorn
 Architecture: all
-Depends: python3-pkg-resources,
-         python3-setuptools,
-         ${misc:Depends},
-         ${python3:Depends}
+Depends:
+ python3-pkg-resources,
+ python3-setuptools,
+ ${misc:Depends},
+ ${python3:Depends}
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -96,13 +108,15 @@ Description: Event-based HTTP/WSGI server
 
 Package: gunicorn3
 Architecture: all
-Depends: python3-gunicorn (= ${binary:Version}),
-         ${misc:Depends},
-         ${python3:Depends}
-Suggests: gunicorn-examples (= ${binary:Version}),
-          python3-pastedeploy,
-          python3-setproctitle,
-          python3-tornado
+Depends:
+ python3-gunicorn (= ${binary:Version}),
+ ${misc:Depends},
+ ${python3:Depends}
+Suggests:
+ gunicorn-examples (= ${binary:Version}),
+ python3-pastedeploy,
+ python3-setproctitle,
+ python3-tornado
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
@@ -123,10 +137,16 @@ Description: Event-based HTTP/WSGI server
 
 Package: gunicorn-examples
 Architecture: all
-Depends: ${misc:Depends}, ${python3:Depends}
-Replaces: gunicorn (<< 19.0-3)
-Breaks: gunicorn (<< 19.0-3)
-Recommends: libjs-jquery, libjs-jquery-flot
+Depends:
+ ${misc:Depends},
+ ${python3:Depends}
+Replaces:
+ gunicorn (<< 19.0-3)
+Breaks:
+ gunicorn (<< 19.0-3)
+Recommends:
+ libjs-jquery,
+ libjs-jquery-flot
 Description: Event-based HTTP/WSGI server
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
