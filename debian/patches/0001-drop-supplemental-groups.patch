@@ -1,11 +1,13 @@
 From: Chris Lamb <lamby@debian.org>
-Date: Tue Oct 16 12:05:35 2012 +0100
+Date: Tue, 16 Oct 2012 12:05:35 +0100
 Subject: 0001-drop-supplemental-groups
 
 ---
  gunicorn/util.py | 9 +++++++++
  1 file changed, 9 insertions(+)
 
+diff --git a/gunicorn/util.py b/gunicorn/util.py
+index 13e6d65..12f31b1 100644
 --- a/gunicorn/util.py
 +++ b/gunicorn/util.py
 @@ -21,6 +21,7 @@ import inspect

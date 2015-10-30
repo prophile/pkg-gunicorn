@@ -1,5 +1,13 @@
+From: Chris Lamb <lamby@debian.org>
+Date: Fri, 30 Oct 2015 12:05:16 +0000
+Subject: use-system-js-libs
+
+---
+ examples/websocket/websocket.html | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
 diff --git a/examples/websocket/websocket.html b/examples/websocket/websocket.html
-index 07708fa..ab5d9b8 100644
+index 59467d4..39daf00 100644
 --- a/examples/websocket/websocket.html
 +++ b/examples/websocket/websocket.html
 @@ -3,8 +3,8 @@

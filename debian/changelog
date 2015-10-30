@@ -1,3 +1,9 @@
+gunicorn (19.3-3) UNRELEASED; urgency=medium
+
+  * Rebase patches with gbp-pq.
+
+ -- Chris Lamb <lamby@debian.org>  Fri, 30 Oct 2015 12:05:33 +0000
+
 gunicorn (19.3-2) unstable; urgency=medium
 
   * Correct path in `rm` call to _gaiohttp.py (Closes: #803170)
