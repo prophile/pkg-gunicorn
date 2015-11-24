@@ -125,7 +125,7 @@ class Config(dict):
         data.setdefault('retry', '60')
         data.setdefault('environment', {})
         data.setdefault('working_dir', '/')
-        data.setdefault('python3', '/usr/bin/python3')
+        data.setdefault('python', '/usr/bin/python3')
 
         self.update(data)
 
