@@ -1,4 +1,4 @@
-gunicorn (19.3-3) UNRELEASED; urgency=medium
+gunicorn (19.3-3) unstable; urgency=medium
 
   * Correct Python interpreter path references in gunicorn3-debian. Thanks to
     Olivier AUDRY <olivier@minas.fr> for the report and patch, although note I
@@ -6,7 +6,7 @@ gunicorn (19.3-3) UNRELEASED; urgency=medium
     (Closes: #805973)
   * Rebase patches with gbp-pq.
 
- -- Chris Lamb <lamby@debian.org>  Fri, 30 Oct 2015 12:05:33 +0000
+ -- Chris Lamb <lamby@debian.org>  Tue, 24 Nov 2015 21:41:23 +0200
 
 gunicorn (19.3-2) unstable; urgency=medium
 
