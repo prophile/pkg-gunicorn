@@ -5,18 +5,14 @@
 #
 # Example code from Eventlet sources
 
-import os
-import pprint
 from wsgiref.validate import validator
-import sys
 
 from gunicorn import __version__
-#@validator
+
+
+@validator
 def app(environ, start_response):
     """Simplest possible application object"""
-
-    errors = environ['wsgi.errors']
-#    pprint.pprint(('ENVIRON', environ), stream=errors)
 
     data = b'Hello, World!\n'
     status = '200 OK'
@@ -25,7 +21,7 @@ def app(environ, start_response):
         ('Content-type', 'text/plain'),
         ('Content-Length', str(len(data))),
         ('X-Gunicorn-Version', __version__),
-        ("Test", "test тест"),
+        #("Test", "test тест"),
     ]
     start_response(status, response_headers)
     return iter([data])

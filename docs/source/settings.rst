@@ -16,13 +16,19 @@ Config File
 config
 ~~~~~~
 
-* ``-c FILE, --config FILE``
+* ``-c CONFIG, --config CONFIG``
 * ``None``
 
-The path to a Gunicorn config file, or python module.
+The Gunicorn config file.
+
+A string of the form ``PATH``, ``file:PATH``, or ``python:MODULE_NAME``.
 
 Only has an effect when specified on the command line or as part of an
 application specific configuration.
+
+.. versionchanged:: 19.4
+   Loading the config from a Python module requires the ``python:``
+   prefix.
 
 Server Socket
 -------------
@@ -35,8 +41,8 @@ bind
 
 The socket to bind.
 
-A string of the form: 'HOST', 'HOST:PORT', 'unix:PATH'. An IP is a valid
-HOST.
+A string of the form: ``HOST``, ``HOST:PORT``, ``unix:PATH``. An IP is
+a valid ``HOST``.
 
 Multiple addresses can be bound. ex.::
 
@@ -71,12 +77,12 @@ workers
 
 The number of worker processes for handling requests.
 
-A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
-want to vary this a bit to find the best for your particular
+A positive integer generally in the ``2-4 x $(NUM_CORES)`` range.
+You'll want to vary this a bit to find the best for your particular
 application's work load.
 
-By default, the value of the WEB_CONCURRENCY environment variable. If
-it is not defined, the default is 1.
+By default, the value of the ``WEB_CONCURRENCY`` environment variable.
+If it is not defined, the default is 1.
 
 worker_class
 ~~~~~~~~~~~~
@@ -86,11 +92,9 @@ worker_class
 
 The type of workers to use.
 
-The default class (sync) should handle most 'normal' types of
-workloads.  You'll want to read
-http://docs.gunicorn.org/en/latest/design.html for information
-on when you might want to choose one of the other worker
-classes.
+The default class (``sync``) should handle most "normal" types of
+workloads. You'll want to read :doc:`design` for information on when
+you might want to choose one of the other worker classes.
 
 A string referring to one of the following bundled classes:
 
@@ -99,11 +103,11 @@ A string referring to one of the following bundled classes:
 * ``gevent``   - Requires gevent >= 0.13
 * ``tornado``  - Requires tornado >= 0.2
 
-Optionally, you can provide your own worker by giving gunicorn a
-python path to a subclass of gunicorn.workers.base.Worker. This
-alternative syntax will load the gevent class:
-``gunicorn.workers.ggevent.GeventWorker``. Alternatively the syntax
-can also load the gevent class with ``egg:gunicorn#gevent``
+Optionally, you can provide your own worker by giving Gunicorn a
+Python path to a subclass of ``gunicorn.workers.base.Worker``.
+This alternative syntax will load the gevent class:
+``gunicorn.workers.ggevent.GeventWorker``. Alternatively, the syntax
+can also load the gevent class with ``egg:gunicorn#gevent``.
 
 threads
 ~~~~~~~
@@ -115,8 +119,8 @@ The number of worker threads for handling requests.
 
 Run each worker with the specified number of threads.
 
-A positive integer generally in the 2-4 x $(NUM_CORES) range. You'll
-want to vary this a bit to find the best for your particular
+A positive integer generally in the ``2-4 x $(NUM_CORES)`` range.
+You'll want to vary this a bit to find the best for your particular
 application's work load.
 
 If it is not defined, the default is 1.
@@ -152,7 +156,7 @@ max_requests_jitter
 * ``--max-requests-jitter INT``
 * ``0``
 
-The maximum jitter to add to the max-requests setting.
+The maximum jitter to add to the *max_requests* setting.
 
 The jitter causes the restart per worker to be randomized by
 ``randint(0, max_requests_jitter)``. This is intended to stagger worker
@@ -181,9 +185,9 @@ graceful_timeout
 
 Timeout for graceful workers restart.
 
-Generally set to thirty seconds. How max time worker can handle
-request after got restart signal. If the time is up worker will
-be force killed.
+After receiving a restart signal, workers have this much time to finish
+serving requests. Workers still alive after the timeout (starting from
+the receipt of the restart signal) are force killed.
 
 keepalive
 ~~~~~~~~~
@@ -226,7 +230,7 @@ limit_request_fields
 Limit the number of HTTP headers fields in a request.
 
 This parameter is used to limit the number of headers in a request to
-prevent DDOS attack. Used with the `limit_request_field_size` it allows
+prevent DDOS attack. Used with the *limit_request_field_size* it allows
 more safety. By default this value is 100 and can't be larger than
 32768.
 
@@ -296,12 +300,15 @@ restarting workers.
 sendfile
 ~~~~~~~~
 
-* ``--sendfile``
+* ``--no-sendfile``
 * ``True``
 
-Enables or disables the use of ``sendfile()``.
+Disables the use of ``sendfile()``.
 
 .. versionadded:: 19.2
+.. versionchanged:: 19.4
+   Swapped ``--sendfile`` with ``--no-sendfile`` to actually allow
+   disabling.
 
 chdir
 ~~~~~
@@ -365,8 +372,8 @@ user
 Switch worker processes to run as this user.
 
 A valid user id (as an integer) or the name of a user that can be
-retrieved with a call to pwd.getpwnam(value) or None to not change
-the worker process user.
+retrieved with a call to ``pwd.getpwnam(value)`` or ``None`` to not
+change the worker process user.
 
 group
 ~~~~~
@@ -377,8 +384,8 @@ group
 Switch worker process to run as this group.
 
 A valid group id (as an integer) or the name of a user that can be
-retrieved with a call to pwd.getgrnam(value) or None to not change
-the worker processes group.
+retrieved with a call to ``pwd.getgrnam(value)`` or ``None`` to not
+change the worker processes group.
 
 umask
 ~~~~~
@@ -390,9 +397,10 @@ A bit mask for the file mode on files written by Gunicorn.
 
 Note that this affects unix socket permissions.
 
-A valid value for the os.umask(mode) call or a string compatible with
-int(value, 0) (0 means Python guesses the base, so values like "0",
-"0xFF", "0022" are valid for decimal, hex, and octal representations)
+A valid value for the ``os.umask(mode)`` call or a string compatible
+with ``int(value, 0)`` (``0`` means Python guesses the base, so values
+like ``0``, ``0xFF``, ``0022`` are valid for decimal, hex, and octal
+representations)
 
 tmp_upload_dir
 ~~~~~~~~~~~~~~
@@ -413,8 +421,8 @@ secure_scheme_headers
 * ``{'X-FORWARDED-PROTOCOL': 'ssl', 'X-FORWARDED-PROTO': 'https', 'X-FORWARDED-SSL': 'on'}``
 
 A dictionary containing headers and values that the front-end proxy
-uses to indicate HTTPS requests. These tell gunicorn to set
-wsgi.url_scheme to "https", so your application can tell that the
+uses to indicate HTTPS requests. These tell Gunicorn to set
+``wsgi.url_scheme`` to ``https``, so your application can tell that the
 request is secure.
 
 The dictionary should map upper-case header names to exact string
@@ -434,7 +442,7 @@ forwarded_allow_ips
 Front-end's IPs from which allowed to handle set secure headers.
 (comma separate).
 
-Set to "*" to disable checking of Front-end IPs (useful for setups
+Set to ``*`` to disable checking of Front-end IPs (useful for setups
 where you don't know in advance the IP address of Front-end, but
 you still trust the environment)
 
@@ -449,7 +457,7 @@ accesslog
 
 The Access log file to write to.
 
-"-" means log to stderr.
+``'-'`` means log to stderr.
 
 access_log_format
 ~~~~~~~~~~~~~~~~~
@@ -463,12 +471,17 @@ The access log format.
 Identifier  Description
 ==========  ===========
 h           remote address
-l           '-'
-u           currently '-', may be user name in future releases
+l           ``'-'``
+u           user name
 t           date of the request
 r           status line (e.g. ``GET / HTTP/1.1``)
+m           request method
+U           URL path without query string
+q           query string
+H           protocol
 s           status
-b           response length or '-'
+B           response length
+b           response length or ``'-'`` (CLF format)
 f           referer
 a           user agent
 T           request time in seconds
@@ -487,10 +500,10 @@ errorlog
 
 The Error log file to write to.
 
-"-" means log to stderr.
+``'-'`` means log to stderr.
 
 .. versionchanged:: 19.2
-   Log to ``stderr`` by default.
+   Log to stderr by default.
 
 loglevel
 ~~~~~~~~
@@ -514,15 +527,15 @@ logger_class
 * ``--logger-class STRING``
 * ``gunicorn.glogging.Logger``
 
-The logger you want to use to log events in gunicorn.
+The logger you want to use to log events in Gunicorn.
 
 The default class (``gunicorn.glogging.Logger``) handle most of
 normal usages in logging. It provides error and access logging.
 
-You can provide your own worker by giving gunicorn a
-python path to a subclass like gunicorn.glogging.Logger.
+You can provide your own worker by giving Gunicorn a
+Python path to a subclass like ``gunicorn.glogging.Logger``.
 Alternatively the syntax can also load the Logger class
-with `egg:gunicorn#simple`
+with ``egg:gunicorn#simple``.
 
 logconfig
 ~~~~~~~~~
@@ -544,11 +557,11 @@ Address to send syslog messages.
 
 Address is a string of the form:
 
-* 'unix://PATH#TYPE' : for unix domain socket. TYPE can be 'stream'
-  for the stream driver or 'dgram' for the dgram driver.
-  'stream' is the default.
-* 'udp://HOST:PORT' : for UDP sockets
-* 'tcp://HOST:PORT' : for TCP sockets
+* ``unix://PATH#TYPE`` : for unix domain socket. ``TYPE`` can be ``stream``
+  for the stream driver or ``dgram`` for the dgram driver.
+  ``stream`` is the default.
+* ``udp://HOST:PORT`` : for UDP sockets
+* ``tcp://HOST:PORT`` : for TCP sockets
 
 syslog
 ~~~~~~
@@ -564,10 +577,10 @@ syslog_prefix
 * ``--log-syslog-prefix SYSLOG_PREFIX``
 * ``None``
 
-Makes gunicorn use the parameter as program-name in the syslog entries.
+Makes Gunicorn use the parameter as program-name in the syslog entries.
 
-All entries will be prefixed by gunicorn.<prefix>. By default the program
-name is the name of the process.
+All entries will be prefixed by ``gunicorn.<prefix>``. By default the
+program name is the name of the process.
 
 syslog_facility
 ~~~~~~~~~~~~~~~
@@ -587,7 +600,7 @@ Enable stdio inheritance
 
 Enable inheritance for stdio file descriptors in daemon mode.
 
-Note: To disable the python stdout buffering, you can to set the user
+Note: To disable the Python stdout buffering, you can to set the user
 environment variable ``PYTHONUNBUFFERED`` .
 
 statsd_host
@@ -627,7 +640,7 @@ running more than one instance of Gunicorn you'll probably want to set a
 name to tell them apart. This requires that you install the setproctitle
 module.
 
-It defaults to 'gunicorn'.
+If not set, the *default_proc_name* setting will be used.
 
 default_proc_name
 ~~~~~~~~~~~~~~~~~
@@ -647,10 +660,10 @@ django_settings
 
 The Python path to a Django settings module. (deprecated)
 
-e.g. 'myproject.settings.main'. If this isn't provided, the
-DJANGO_SETTINGS_MODULE environment variable will be used.
+e.g. ``myproject.settings.main``. If this isn't provided, the
+``DJANGO_SETTINGS_MODULE`` environment variable will be used.
 
-**DEPRECATED**: use the --env argument instead.
+**DEPRECATED**: use the ``--env`` argument instead.
 
 Server Mechanics
 ----------------
@@ -661,10 +674,10 @@ pythonpath
 * ``--pythonpath STRING``
 * ``None``
 
-A directory to add to the Python path.
+A comma-separated list of directories to add to the Python path.
 
 e.g.
-'/home/djangoprojects/myproject'.
+``'/home/djangoprojects/myproject,/home/python/mylibrary'``.
 
 paste
 ~~~~~
@@ -672,9 +685,9 @@ paste
 * ``--paste STRING, --paster STRING``
 * ``None``
 
-Load a paste.deploy config file. The argument may contain a "#" symbol
-followed by the name of an app section from the config file, e.g.
-"production.ini#admin".
+Load a PasteDeploy config file. The argument may contain a ``#``
+symbol followed by the name of an app section from the config file,
+e.g. ``production.ini#admin``.
 
 At this time, using alternate server blocks is not supported. Use the
 command line arguments to control server configuration instead.
@@ -844,13 +857,13 @@ nworkers_changed
         def nworkers_changed(server, new_value, old_value):
             pass
 
-Called just after num_workers has been changed.
+Called just after *num_workers* has been changed.
 
 The callable needs to accept an instance variable of the Arbiter and
 two integers of number of workers after and before change.
 
-If the number of workers is set for the first time, old_value would be
-None.
+If the number of workers is set for the first time, *old_value* would
+be ``None``.
 
 on_exit
 ~~~~~~~
@@ -860,7 +873,7 @@ on_exit
         def on_exit(server):
             pass
 
-Called just before exiting gunicorn.
+Called just before exiting Gunicorn.
 
 The callable needs to accept a single instance variable for the Arbiter.
 
@@ -875,8 +888,8 @@ proxy_protocol
 
 Enable detect PROXY protocol (PROXY mode).
 
-Allow using Http and Proxy together. It may be useful for work with
-stunnel as https frontend and gunicorn as http server.
+Allow using HTTP and Proxy together. It may be useful for work with
+stunnel as HTTPS frontend and Gunicorn as HTTP server.
 
 PROXY protocol: http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
 
@@ -897,11 +910,11 @@ proxy_allow_ips
 
 Front-end's IPs from which allowed accept proxy requests (comma separate).
 
-Set to "*" to disable checking of Front-end IPs (useful for setups
+Set to ``*`` to disable checking of Front-end IPs (useful for setups
 where you don't know in advance the IP address of Front-end, but
 you still trust the environment)
 
-Ssl
+SSL
 ---
 
 keyfile
