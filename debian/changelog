@@ -1,3 +1,9 @@
+gunicorn (19.4.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Thu, 10 Dec 2015 17:20:25 +0200
+
 gunicorn (19.3-3) unstable; urgency=medium
 
   * Correct Python interpreter path references in gunicorn3-debian. Thanks to
