@@ -49,7 +49,7 @@ you should use one of the async workers.
 
 .. _slowloris: http://ha.ckers.org/slowloris/
 .. _setproctitle: http://pypi.python.org/pypi/setproctitle
-.. _proc_name: configure.html#proc-name
+.. _proc_name: settings.html#proc-name
 
 
 Worker Processes
@@ -96,7 +96,7 @@ experience high load due to this problem when using many workers or threads.
 However `a work has been started <https://github.com/benoitc/gunicorn/issues/792>`_
 to remove this issue.
 
-.. _worker_class: configure.html#worker-class
+.. _worker_class: settings.html#worker-class
 .. _`number of workers`: design.html#how-many-workers
 
 Why I don't see any logs in the console?

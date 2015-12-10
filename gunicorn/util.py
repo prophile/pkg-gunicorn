@@ -26,7 +26,6 @@ from gunicorn.errors import AppImportError
 from gunicorn.six import text_type
 from gunicorn.workers import SUPPORTED_WORKERS
 
-
 MAXFD = 1024
 REDIRECT_TO = getattr(os, 'devnull', '/dev/null')
 
@@ -499,14 +498,14 @@ def check_is_writeable(path):
     f.close()
 
 
-def to_bytestring(value):
+def to_bytestring(value, encoding="utf8"):
     """Converts a string argument to a byte string"""
     if isinstance(value, bytes):
         return value
     if not isinstance(value, text_type):
         raise TypeError('%r is not a string' % value)
-    return value.encode("utf-8")
 
+    return value.encode(encoding)
 
 def is_fileobject(obj):
     if not hasattr(obj, "tell") or not hasattr(obj, "fileno"):
@@ -532,3 +531,15 @@ def warn(msg):
 
     print("!!!\n", file=sys.stderr)
     sys.stderr.flush()
+
+
+def make_fail_app(msg):
+
+    def app(environ, start_response):
+        start_response("500 Internal Server Error", [
+            ("Content-Type", "text/plain"),
+            ("Content-Length", str(len(msg)))
+        ])
+        return [msg]
+
+    return app

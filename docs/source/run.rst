@@ -47,8 +47,8 @@ You can now run the app with the following command::
 Commonly Used Arguments
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-* ``-c CONFIG, --config=CONFIG`` - Specify the path to a config file or
-  Python module.
+* ``-c CONFIG, --config=CONFIG`` - Specify a config file in the form
+  ``$(PATH)``, ``file:$(PATH)``, or ``python:$(MODULE_NAME)``.
 * ``-b BIND, --bind=BIND`` - Specify a server socket to bind. Server sockets
   can be any of ``$(HOST)``, ``$(HOST):$(PORT)``, or ``unix:$(PATH)``.
   An IP is a valid ``$(HOST)``.
@@ -57,7 +57,7 @@ Commonly Used Arguments
   Check the :ref:`faq` for ideas on tuning this parameter.
 * ``-k WORKERCLASS, --worker-class=WORKERCLASS`` - The type of worker process
   to run. You'll definitely want to read the production page for the
-  implications of this parameter. You can set this to ``egg:gunicorn#$(NAME)``
+  implications of this parameter. You can set this to ``$(NAME)``
   where ``$(NAME)`` is one of ``sync``, ``eventlet``, ``gevent``, or
   ``tornado``, ``gthread``, ``gaiohttp``. ``sync`` is the default.
 * ``-n APP_NAME, --name=APP_NAME`` - If setproctitle_ is installed you can
