@@ -1,3 +1,9 @@
+gunicorn (19.4.5-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Chris Lamb <lamby@debian.org>  Mon, 11 Jan 2016 13:53:00 +0000
+
 gunicorn (19.4.1-1) unstable; urgency=medium
 
   * New upstream release.
