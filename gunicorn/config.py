@@ -281,6 +281,9 @@ Setting = SettingMeta('Setting', (Setting,), {})
 
 
 def validate_bool(val):
+    if val is None:
+        return
+
     if isinstance(val, bool):
         return val
     if not isinstance(val, six.string_types):
@@ -681,8 +684,8 @@ class GracefulTimeout(Setting):
     desc = """\
         Timeout for graceful workers restart.
 
-        After receiving a restart signal, workers have this much time to finish 
-        serving requests. Workers still alive after the timeout (starting from 
+        After receiving a restart signal, workers have this much time to finish
+        serving requests. Workers still alive after the timeout (starting from
         the receipt of the restart signal) are force killed.
         """
 
@@ -821,13 +824,14 @@ class PreloadApp(Setting):
         restarting workers.
         """
 
+
 class Sendfile(Setting):
     name = "sendfile"
     section = "Server Mechanics"
     cli = ["--no-sendfile"]
     validator = validate_bool
-    action = "store_false"
-    default = True
+    action = "store_const"
+    const = False
     desc = """\
         Disables the use of ``sendfile()``.
 
@@ -836,6 +840,7 @@ class Sendfile(Setting):
            Swapped ``--sendfile`` with ``--no-sendfile`` to actually allow
            disabling.
         """
+
 
 class Chdir(Setting):
     name = "chdir"
@@ -1081,7 +1086,7 @@ class ErrorLog(Setting):
     desc = """\
         The Error log file to write to.
 
-        ``'-'`` means log to stderr.
+        Using ``'-'`` for FILE makes gunicorn log to stderr.
 
         .. versionchanged:: 19.2
            Log to stderr by default.
@@ -1691,6 +1696,7 @@ class DoHandshakeOnConnect(Setting):
     desc = """\
     Whether to perform SSL handshake on socket connect (see stdlib ssl module's)
     """
+
 
 if sys.version_info >= (2, 7):
     class Ciphers(Setting):

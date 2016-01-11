@@ -278,7 +278,7 @@ class Logger(object):
         for format details
         """
 
-        if not self.cfg.accesslog and not self.cfg.logconfig:
+        if not (self.cfg.accesslog or self.cfg.logconfig or self.cfg.syslog):
             return
 
         # wrap atoms:
@@ -338,7 +338,12 @@ class Logger(object):
                 util.check_is_writeable(output)
                 h = logging.FileHandler(output)
                 # make sure the user can reopen the file
-                os.chown(h.baseFilename, self.cfg.user, self.cfg.group)
+                try:
+                    os.chown(h.baseFilename, self.cfg.user, self.cfg.group)
+                except OSError:
+                    # it's probably OK there, we assume the user has given
+                    # /dev/null as a parameter.
+                    pass
 
             h.setFormatter(fmt)
             h._gunicorn = True

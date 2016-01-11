@@ -1,0 +1,18 @@
+================
+Changelog - 2016
+================
+
+.. note::
+
+   Please see :doc:`news` for the latest changes55
+
+19.4.5 / 2016/01/05
+===================
+
+- fix: NameError fileno in gunicorn.http.wsgi (:issue:`1178`)
+
+19.4.4 / 2016/01/04
+===================
+
+- fix: check if a fileobject can be used with sendfile(2) (:issue:`1174`)
+- doc: be more descriptive in errorlog option (:issue:`1173`)
