@@ -347,14 +347,17 @@ class Response(object):
         util.write(self.sock, arg, self.chunked)
 
     def can_sendfile(self):
-        return self.cfg.sendfile and sendfile is not None
+        return self.cfg.sendfile is not False and sendfile is not None
 
     def sendfile(self, respiter):
         if self.cfg.is_ssl or not self.can_sendfile():
             return False
 
+        if not util.has_fileno(respiter.filelike):
+            return False
+
+        fileno = respiter.filelike.fileno()
         try:
-            fileno = respiter.filelike.fileno()
             offset = os.lseek(fileno, 0, os.SEEK_CUR)
             if self.response_length is None:
                 filesize = os.fstat(fileno).st_size
@@ -379,7 +382,7 @@ class Response(object):
         sockno = self.sock.fileno()
         sent = 0
 
-        for m in range(0, nbytes, BLKSIZE):
+        while sent != nbytes:
             count = min(nbytes - sent, BLKSIZE)
             sent += sendfile(sockno, fileno, offset + sent, count)
 
