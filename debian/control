@@ -12,7 +12,7 @@ Build-Depends-Indep:
  python-setuptools,
  python3-setuptools
 Standards-Version: 3.9.8
-Vcs-Git: git://github.com/lamby/pkg-gunicorn.git
+Vcs-Git: https://github.com/lamby/pkg-gunicorn
 Vcs-Browser: https://github.com/lamby/pkg-gunicorn
 X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.2
