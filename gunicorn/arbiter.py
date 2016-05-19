@@ -11,7 +11,6 @@ import select
 import signal
 import sys
 import time
-import traceback
 
 from gunicorn.errors import HaltServer, AppImportError
 from gunicorn.pidfile import Pidfile
@@ -207,8 +206,8 @@ class Arbiter(object):
         except SystemExit:
             raise
         except Exception:
-            self.log.info("Unhandled exception in main loop:\n%s",
-                          traceback.format_exc())
+            self.log.info("Unhandled exception in main loop",
+                          exc_info=True)
             self.stop(False)
             if self.pidfile is not None:
                 self.pidfile.unlink()
@@ -335,6 +334,8 @@ class Arbiter(object):
         :attr graceful: boolean, If True (the default) workers will be
         killed gracefully  (ie. trying to wait for the current connection)
         """
+        for l in self.LISTENERS:
+            l.close()
         self.LISTENERS = []
         sig = signal.SIGTERM
         if not graceful:
@@ -399,7 +400,8 @@ class Arbiter(object):
             [l.close() for l in self.LISTENERS]
             # init new listeners
             self.LISTENERS = create_sockets(self.cfg, self.log)
-            self.log.info("Listening at: %s", ",".join(str(self.LISTENERS)))
+            listeners_str = ",".join([str(l) for l in self.LISTENERS])
+            self.log.info("Listening at: %s", listeners_str)
 
         # do some actions on reload
         self.cfg.on_reload(self)
@@ -517,14 +519,13 @@ class Arbiter(object):
         except SystemExit:
             raise
         except AppImportError as e:
-            self.log.debug("Exception while loading the application: \n%s",
-                           traceback.format_exc())
+            self.log.debug("Exception while loading the application",
+                           exc_info=True)
             print("%s" % e, file=sys.stderr)
             sys.stderr.flush()
             sys.exit(self.APP_LOAD_ERROR)
         except:
-            self.log.exception("Exception in worker process:\n%s",
-                               traceback.format_exc())
+            self.log.exception("Exception in worker process"),
             if not worker.booted:
                 sys.exit(self.WORKER_BOOT_ERROR)
             sys.exit(-1)

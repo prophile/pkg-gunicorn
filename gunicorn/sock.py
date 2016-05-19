@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 import errno
+import fcntl
 import os
 import socket
 import stat
@@ -53,11 +54,15 @@ class BaseSocket(object):
         sock.bind(self.cfg_addr)
 
     def close(self):
+        if self.sock is None:
+            return
+
         try:
             self.sock.close()
         except socket.error as e:
             self.log.info("Error while closing socket %s", str(e))
-        del self.sock
+
+        self.sock = None
 
 
 class TCPSocket(BaseSocket):
@@ -105,6 +110,8 @@ class UnixSocket(BaseSocket):
                     raise ValueError("%r is not a socket" % addr)
         self.parent = os.getpid()
         super(UnixSocket, self).__init__(addr, conf, log, fd=fd)
+        # each arbiter grabs a shared lock on the unix socket.
+        fcntl.lockf(self.sock, fcntl.LOCK_SH | fcntl.LOCK_NB)
 
     def __str__(self):
         return "unix:%s" % self.cfg_addr
@@ -117,9 +124,17 @@ class UnixSocket(BaseSocket):
 
 
     def close(self):
-        super(UnixSocket, self).close()
         if self.parent == os.getpid():
-            os.unlink(self.cfg_addr)
+            # attempt to acquire an exclusive lock on the unix socket.
+            # if we're the only arbiter running, the lock will succeed, and
+            # we can safely rm the socket.
+            try:
+                fcntl.lockf(self.sock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except:
+                pass
+            else:
+                os.unlink(self.cfg_addr)
+        super(UnixSocket, self).close()
 
 
 def _sock_type(addr):

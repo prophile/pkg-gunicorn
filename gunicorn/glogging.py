@@ -52,9 +52,16 @@ CONFIG_DEFAULTS = dict(
             "root": {"level": "INFO", "handlers": ["console"]},
             "gunicorn.error": {
                 "level": "INFO",
-                "handlers": ["console"],
+                "handlers": ["error_console"],
                 "propagate": True,
                 "qualname": "gunicorn.error"
+            },
+
+            "gunicorn.access": {
+                "level": "INFO",
+                "handlers": ["console"],
+                "propagate": True,
+                "qualname": "gunicorn.access"
             }
         },
         handlers={
@@ -62,7 +69,12 @@ CONFIG_DEFAULTS = dict(
                 "class": "logging.StreamHandler",
                 "formatter": "generic",
                 "stream": "sys.stdout"
-            }
+            },
+            "error_console": {
+                "class": "logging.StreamHandler",
+                "formatter": "generic",
+                "stream": "sys.stderr"
+            },
         },
         formatters={
             "generic": {
@@ -237,7 +249,9 @@ class Logger(object):
     def atoms(self, resp, req, environ, request_time):
         """ Gets atoms for log formating.
         """
-        status = resp.status.split(None, 1)[0]
+        status = resp.status
+        if isinstance(status, str):
+            status = status.split(None, 1)[0]
         atoms = {
             'h': environ.get('REMOTE_ADDR', '-'),
             'l': '-',
@@ -250,8 +264,8 @@ class Logger(object):
             'U': environ.get('PATH_INFO'),
             'q': environ.get('QUERY_STRING'),
             'H': environ.get('SERVER_PROTOCOL'),
-            'b': resp.sent and str(resp.sent) or '-',
-            'B': resp.sent,
+            'b': getattr(resp, 'sent', None) and str(resp.sent) or '-',
+            'B': getattr(resp, 'sent', None),
             'f': environ.get('HTTP_REFERER', '-'),
             'a': environ.get('HTTP_USER_AGENT', '-'),
             'T': request_time.seconds,
@@ -266,10 +280,17 @@ class Logger(object):
         else:
             req_headers = req
 
+        if hasattr(req_headers, "items"):
+            req_headers = req_headers.items()
+
         atoms.update(dict([("{%s}i" % k.lower(), v) for k, v in req_headers]))
 
+        resp_headers = resp.headers
+        if hasattr(resp_headers, "items"):
+            resp_headers = resp_headers.items()
+
         # add response headers
-        atoms.update(dict([("{%s}o" % k.lower(), v) for k, v in resp.headers]))
+        atoms.update(dict([("{%s}o" % k.lower(), v) for k, v in resp_headers]))
 
         return atoms
 

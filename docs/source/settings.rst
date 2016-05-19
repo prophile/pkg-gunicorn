@@ -102,6 +102,8 @@ A string referring to one of the following bundled classes:
 * ``eventlet`` - Requires eventlet >= 0.9.7
 * ``gevent``   - Requires gevent >= 0.13
 * ``tornado``  - Requires tornado >= 0.2
+* ``gthread``  - Python 2 requires the futures package to be installed
+* ``gaiohttp`` - Requires Python 3.4 and aiohttp >= 0.21.5
 
 Optionally, you can provide your own worker by giving Gunicorn a
 Python path to a subclass of ``gunicorn.workers.base.Worker``.
@@ -532,6 +534,10 @@ The logger you want to use to log events in Gunicorn.
 The default class (``gunicorn.glogging.Logger``) handle most of
 normal usages in logging. It provides error and access logging.
 
+If you enable statsd support, then a special subclass
+(``gunicorn.instrument.statsd.Statsd``) is used instead, which handles
+sending the metrics to *statsd_host*
+
 You can provide your own worker by giving Gunicorn a
 Python path to a subclass like ``gunicorn.glogging.Logger``.
 Alternatively the syntax can also load the Logger class
@@ -610,6 +616,12 @@ statsd_host
 * ``None``
 
 ``host:port`` of the statsd server to log to.
+
+Note: enabling this switches the default *logger_class* to
+``gunicorn.instrument.statsd.Statsd``. If you wish to use statsd with
+a custom *logger_class*, you should make sure your class is API
+compatible with ``gunicorn.instrument.statsd.Statsd``, or inherit from
+it.
 
 .. versionadded:: 19.1
 
