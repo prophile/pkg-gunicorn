@@ -144,16 +144,18 @@ class Config(object):
         uri = self.settings['logger_class'].get()
         if uri == "simple":
             # support the default
-            uri = "gunicorn.glogging.Logger"
+            uri = LoggerClass.default
 
-        # if statsd is on, automagically switch to the statsd logger
-        if 'statsd_host' in self.settings and self.settings['statsd_host'].value is not None:
-            logger_class = util.load_class("gunicorn.instrument.statsd.Statsd",
-                section="gunicorn.loggers")
-        else:
-            logger_class = util.load_class(uri,
-                default="gunicorn.glogging.Logger",
-                section="gunicorn.loggers")
+        # if default logger is in use, and statsd is on, automagically switch
+        # to the statsd logger
+        if uri == LoggerClass.default:
+            if 'statsd_host' in self.settings and self.settings['statsd_host'].value is not None:
+                uri = "gunicorn.instrument.statsd.Statsd"
+
+        logger_class = util.load_class(
+            uri,
+            default="gunicorn.glogging.Logger",
+            section="gunicorn.loggers")
 
         if hasattr(logger_class, "install"):
             logger_class.install()
@@ -539,7 +541,7 @@ class Workers(Setting):
     meta = "INT"
     validator = validate_pos_int
     type = int
-    default = int(os.environ.get('WEB_CONCURRENCY', 1))
+    default = int(os.environ.get("WEB_CONCURRENCY", 1))
     desc = """\
         The number of worker processes for handling requests.
 
@@ -548,7 +550,7 @@ class Workers(Setting):
         application's work load.
 
         By default, the value of the ``WEB_CONCURRENCY`` environment variable.
-        If it is not defined, the default is 1.
+        If it is not defined, the default is ``1``.
         """
 
 
@@ -572,6 +574,8 @@ class WorkerClass(Setting):
         * ``eventlet`` - Requires eventlet >= 0.9.7
         * ``gevent``   - Requires gevent >= 0.13
         * ``tornado``  - Requires tornado >= 0.2
+        * ``gthread``  - Python 2 requires the futures package to be installed
+        * ``gaiohttp`` - Requires Python 3.4 and aiohttp >= 0.21.5
 
         Optionally, you can provide your own worker by giving Gunicorn a
         Python path to a subclass of ``gunicorn.workers.base.Worker``.
@@ -1014,14 +1018,17 @@ class ForwardedAllowIPS(Setting):
     cli = ["--forwarded-allow-ips"]
     meta = "STRING"
     validator = validate_string_to_list
-    default = "127.0.0.1"
+    default = os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1")
     desc = """\
         Front-end's IPs from which allowed to handle set secure headers.
         (comma separate).
 
         Set to ``*`` to disable checking of Front-end IPs (useful for setups
         where you don't know in advance the IP address of Front-end, but
-        you still trust the environment)
+        you still trust the environment).
+
+        By default, the value of the ``FORWARDED_ALLOW_IPS`` environment
+        variable. If it is not defined, the default is ``"127.0.0.1"``.
         """
 
 
@@ -1225,7 +1232,7 @@ class EnableStdioInheritance(Setting):
     default = False
     action = "store_true"
     desc = """\
-    Enable stdio inheritance
+    Enable stdio inheritance.
 
     Enable inheritance for stdio file descriptors in daemon mode.
 

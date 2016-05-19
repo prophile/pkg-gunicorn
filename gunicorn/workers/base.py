@@ -5,12 +5,12 @@
 
 from datetime import datetime
 import os
+from random import randint
 import signal
+from ssl import SSLError
 import sys
 import time
 import traceback
-from random import randint
-
 
 from gunicorn import util
 from gunicorn.workers.workertmp import WorkerTmp
@@ -113,13 +113,15 @@ class Worker(object):
         [util.close_on_exec(s) for s in self.sockets]
         util.close_on_exec(self.tmp.fileno())
 
+        self.wait_fds = self.sockets + [self.PIPE[0]]
+
         self.log.close_on_exec()
 
         self.init_signals()
 
-        self.cfg.post_worker_init(self)
-
         self.load_wsgi()
+
+        self.cfg.post_worker_init(self)
 
         # Enter main run loop
         self.booted = True
@@ -134,11 +136,18 @@ class Worker(object):
 
             self.log.exception(e)
 
-            exc_type, exc_val, exc_tb = sys.exc_info()
-            self.reloader.add_extra_file(exc_val.filename)
+            # fix from PR #1228
+            # storing the traceback into exc_tb will create a circular reference.
+            # per https://docs.python.org/2/library/sys.html#sys.exc_info warning,
+            # delete the traceback after use.
+            try:
+                exc_type, exc_val, exc_tb = sys.exc_info()
+                self.reloader.add_extra_file(exc_val.filename)
 
-            tb_string = traceback.format_exc(exc_tb)
-            self.wsgi = util.make_fail_app(tb_string)
+                tb_string = traceback.format_tb(exc_tb)
+                self.wsgi = util.make_fail_app(tb_string)
+            finally:
+                del exc_tb
 
     def init_signals(self):
         # reset signaling
@@ -156,6 +165,9 @@ class Worker(object):
         if hasattr(signal, 'siginterrupt'):  # python >= 2.6
             signal.siginterrupt(signal.SIGTERM, False)
             signal.siginterrupt(signal.SIGUSR1, False)
+
+        if hasattr(signal, 'set_wakeup_fd'):
+            signal.set_wakeup_fd(self.PIPE[1])
 
     def handle_usr1(self, sig, frame):
         self.log.reopen_files()
@@ -181,7 +193,8 @@ class Worker(object):
         if isinstance(exc, (InvalidRequestLine, InvalidRequestMethod,
                 InvalidHTTPVersion, InvalidHeader, InvalidHeaderName,
                 LimitRequestLine, LimitRequestHeaders,
-                InvalidProxyLine, ForbiddenProxyRequest)):
+                InvalidProxyLine, ForbiddenProxyRequest,
+                SSLError)):
 
             status_int = 400
             reason = "Bad Request"
@@ -206,12 +219,16 @@ class Worker(object):
                 reason = "Forbidden"
                 mesg = "Request forbidden"
                 status_int = 403
+            elif isinstance(exc, SSLError):
+                reason = "Forbidden"
+                mesg = "'%s'" % str(exc)
+                status_int = 403
 
             msg = "Invalid request from ip={ip}: {error}"
             self.log.debug(msg.format(ip=addr[0], error=str(exc)))
         else:
-            self.log.exception("Error handling request %s", req.uri)
-
+            if hasattr(req, "uri"):
+                self.log.exception("Error handling request %s", req.uri)
             status_int = 500
             reason = "Internal Server Error"
             mesg = ""

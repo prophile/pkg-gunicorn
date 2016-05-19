@@ -54,6 +54,7 @@ def _eventlet_serve(sock, handle, concurrency):
             gt.link(_eventlet_stop, server_gt, conn)
             conn, addr, gt = None, None, None
         except eventlet.StopServe:
+            sock.close()
             pool.waitall()
             return
 
@@ -94,6 +95,9 @@ class EventletWorker(AsyncWorker):
         self.patch()
         super(EventletWorker, self).init_process()
 
+    def handle_quit(self, sig, frame):
+        eventlet.spawn(super(EventletWorker, self).handle_quit, sig, frame)
+
     def timeout_ctx(self):
         return eventlet.Timeout(self.cfg.keepalive or None, False)
 
@@ -118,11 +122,7 @@ class EventletWorker(AsyncWorker):
 
         while self.alive:
             self.notify()
-            try:
-                eventlet.sleep(1.0)
-            except AssertionError:
-                self.alive = False
-                break
+            eventlet.sleep(1.0)
 
         self.notify()
         try:

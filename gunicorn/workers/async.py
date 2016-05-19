@@ -55,13 +55,11 @@ class AsyncWorker(base.Worker):
             except StopIteration as e:
                 self.log.debug("Closing connection. %s", e)
             except ssl.SSLError:
-                exc_info = sys.exc_info()
                 # pass to next try-except level
-                six.reraise(exc_info[0], exc_info[1], exc_info[2])
-            except socket.error:
-                exc_info = sys.exc_info()
+                six.reraise(*sys.exc_info())
+            except EnvironmentError:
                 # pass to next try-except level
-                six.reraise(exc_info[0], exc_info[1], exc_info[2])
+                six.reraise(*sys.exc_info())
             except Exception as e:
                 self.handle_error(req, client, addr, e)
         except ssl.SSLError as e:
@@ -71,11 +69,11 @@ class AsyncWorker(base.Worker):
             else:
                 self.log.debug("Error processing SSL request.")
                 self.handle_error(req, client, addr, e)
-        except socket.error as e:
-            if e.args[0] not in (errno.EPIPE, errno.ECONNRESET):
+        except EnvironmentError as e:
+            if e.errno not in (errno.EPIPE, errno.ECONNRESET):
                 self.log.exception("Socket error processing request.")
             else:
-                if e.args[0] == errno.ECONNRESET:
+                if e.errno == errno.ECONNRESET:
                     self.log.debug("Ignoring connection reset")
                 else:
                     self.log.debug("Ignoring EPIPE")
@@ -121,7 +119,7 @@ class AsyncWorker(base.Worker):
                 raise StopIteration()
         except StopIteration:
             raise
-        except socket.error:
+        except EnvironmentError:
             # If the original exception was a socket.error we delegate
             # handling it to the caller (where handle() might ignore it)
             six.reraise(*sys.exc_info())
@@ -133,7 +131,7 @@ class AsyncWorker(base.Worker):
                 try:
                     sock.shutdown(socket.SHUT_RDWR)
                     sock.close()
-                except socket.error:
+                except EnvironmentError:
                     pass
                 raise StopIteration()
             raise
