@@ -29,7 +29,7 @@ Breaks:
  gunicorn (<< 19.0-3)
 Replaces:
  gunicorn (<< 19.0-3)
-Description: Event-based HTTP/WSGI server
+Description: Event-based HTTP/WSGI server (Python modules)
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
  such as nginx or lighttpd.
@@ -88,7 +88,7 @@ Depends:
  python3-setuptools,
  ${misc:Depends},
  ${python3:Depends}
-Description: Event-based HTTP/WSGI server
+Description: Event-based HTTP/WSGI server (Python 3 modules)
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
  such as nginx or lighttpd.
@@ -117,7 +117,7 @@ Suggests:
  python3-pastedeploy,
  python3-setproctitle,
  python3-tornado
-Description: Event-based HTTP/WSGI server
+Description: Event-based HTTP/WSGI server (Python 3 version)
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
  such as nginx or lighttpd.
@@ -147,7 +147,7 @@ Breaks:
 Recommends:
  libjs-jquery,
  libjs-jquery-flot
-Description: Event-based HTTP/WSGI server
+Description: Event-based HTTP/WSGI server examples
  Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
  or sleepy applications. That is to say; behind a buffering front-end server
  such as nginx or lighttpd.
@@ -163,4 +163,4 @@ Description: Event-based HTTP/WSGI server
   * Decode chunked transfers on-the-fly, allowing upload progress notifications
     or stream-based protocols over HTTP
  .
- These are the examples.
+ This package contains various examples and templates.
