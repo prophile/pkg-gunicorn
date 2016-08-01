@@ -18,35 +18,6 @@ X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.2
 Homepage: http://gunicorn.org/
 
-Package: python-gunicorn
-Architecture: all
-Depends:
- python-pkg-resources,
- python-setuptools,
- ${misc:Depends},
- ${python:Depends},
-Breaks:
- gunicorn (<< 19.0-3),
-Replaces:
- gunicorn (<< 19.0-3),
-Description: Event-based HTTP/WSGI server (Python 2 libraries)
- Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
- or sleepy applications. That is to say; behind a buffering front-end server
- such as nginx or lighttpd.
- .
-  * Optional support for Eventlet, Tornado and Gevent to provide asynchronous
-    long-polling ("Comet") connections.
-  * Process management: Gunicorn reaps and restarts workers that die.
-  * Easy integration with Django and Paster compatible applications (Pylons,
-    TurboGears 2, etc.
-  * Load balancing via pre-fork and a shared socket
-  * Graceful worker process restarts
-  * Upgrading without losing connections
-  * Decode chunked transfers on-the-fly, allowing upload progress notifications
-    or stream-based protocols over HTTP
- .
- This is the Python 2 library.
-
 Package: gunicorn
 Architecture: all
 Depends:
@@ -81,36 +52,6 @@ Description: Event-based HTTP/WSGI server (Python 2 version)
  .
  This is the Python 2 version.
 
-Package: gunicorn-examples
-Architecture: all
-Depends:
- ${misc:Depends},
- ${python3:Depends},
-Replaces:
- gunicorn (<< 19.0-3),
-Breaks:
- gunicorn (<< 19.0-3),
-Recommends:
- libjs-jquery,
- libjs-jquery-flot,
-Description: Event-based HTTP/WSGI server (examples)
- Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
- or sleepy applications. That is to say; behind a buffering front-end server
- such as nginx or lighttpd.
- .
-  * Optional support for Eventlet, Tornado and Gevent to provide asynchronous
-    long-polling ("Comet") connections.
-  * Process management: Gunicorn reaps and restarts workers that die.
-  * Easy integration with Django and Paster compatible applications (Pylons,
-    TurboGears 2, etc.
-  * Load balancing via pre-fork and a shared socket
-  * Graceful worker process restarts
-  * Upgrading without losing connections
-  * Decode chunked transfers on-the-fly, allowing upload progress notifications
-    or stream-based protocols over HTTP
- .
- These are the examples.
-
 Package: gunicorn3
 Architecture: all
 Depends:
@@ -140,6 +81,35 @@ Description: Event-based HTTP/WSGI server (Python 3 version)
  .
  This is the Python 3 version.
 
+Package: python-gunicorn
+Architecture: all
+Depends:
+ python-pkg-resources,
+ python-setuptools,
+ ${misc:Depends},
+ ${python:Depends},
+Breaks:
+ gunicorn (<< 19.0-3),
+Replaces:
+ gunicorn (<< 19.0-3),
+Description: Event-based HTTP/WSGI server (Python 2 libraries)
+ Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
+ or sleepy applications. That is to say; behind a buffering front-end server
+ such as nginx or lighttpd.
+ .
+  * Optional support for Eventlet, Tornado and Gevent to provide asynchronous
+    long-polling ("Comet") connections.
+  * Process management: Gunicorn reaps and restarts workers that die.
+  * Easy integration with Django and Paster compatible applications (Pylons,
+    TurboGears 2, etc.
+  * Load balancing via pre-fork and a shared socket
+  * Graceful worker process restarts
+  * Upgrading without losing connections
+  * Decode chunked transfers on-the-fly, allowing upload progress notifications
+    or stream-based protocols over HTTP
+ .
+ This is the Python 2 library.
+
 Package: python3-gunicorn
 Architecture: all
 Depends:
@@ -164,3 +134,33 @@ Description: Event-based HTTP/WSGI server (Python 3 libraries)
     or stream-based protocols over HTTP
  .
  This is the Python 3 library.
+
+Package: gunicorn-examples
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Replaces:
+ gunicorn (<< 19.0-3),
+Breaks:
+ gunicorn (<< 19.0-3),
+Recommends:
+ libjs-jquery,
+ libjs-jquery-flot,
+Description: Event-based HTTP/WSGI server (examples)
+ Green Unicorn (gunicorn) is an HTTP/WSGI server designed to serve fast clients
+ or sleepy applications. That is to say; behind a buffering front-end server
+ such as nginx or lighttpd.
+ .
+  * Optional support for Eventlet, Tornado and Gevent to provide asynchronous
+    long-polling ("Comet") connections.
+  * Process management: Gunicorn reaps and restarts workers that die.
+  * Easy integration with Django and Paster compatible applications (Pylons,
+    TurboGears 2, etc.
+  * Load balancing via pre-fork and a shared socket
+  * Graceful worker process restarts
+  * Upgrading without losing connections
+  * Decode chunked transfers on-the-fly, allowing upload progress notifications
+    or stream-based protocols over HTTP
+ .
+ These are the examples.
