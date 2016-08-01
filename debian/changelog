@@ -8,6 +8,7 @@ gunicorn (19.6.0-2) UNRELEASED; urgency=medium
   * Ensure that package short descriptions are unique to appease lintian.
   * wrap-and-sort -sa.
   * Re-order binary packages in debian/control.
+  * Move to DEP-5 copyright file.
 
  -- Chris Lamb <lamby@debian.org>  Mon, 01 Aug 2016 13:12:18 -0400
 
