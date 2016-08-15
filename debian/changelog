@@ -1,3 +1,17 @@
+gunicorn (19.6.0-2) unstable; urgency=medium
+
+  * Reload in logrotate's postrotate, otherwise gunicorn processes continue
+    writing to the rotated files and not the new ones.  Thanks to Dimitris
+    Bliablias <bl.dimitris@gmail.com> for the report and patch, although note
+    that we call the more generic "reload" action instead of the suggested
+    kill(1) call. (Closes: #832603)
+  * Ensure that package short descriptions are unique to appease lintian.
+  * wrap-and-sort -sa.
+  * Re-order binary packages in debian/control.
+  * Move to DEP-5 copyright file.
+
+ -- Chris Lamb <lamby@debian.org>  Mon, 01 Aug 2016 16:08:44 -0400
+
 gunicorn (19.6.0-1) unstable; urgency=medium
 
   * New upstream release.
