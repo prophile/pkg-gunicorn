@@ -2,7 +2,7 @@ gunicorn (19.6.0-2~bpo8+1) jessie-backports; urgency=medium
 
   * Rebuild for jessie-backports.
 
- -- Chris Lamb <lamby@debian.org>  Mon, 15 Aug 2016 22:46:48 +0100
+ -- Chris Lamb <lamby@debian.org>  Mon, 15 Aug 2016 22:49:54 +0100
 
 gunicorn (19.6.0-2) unstable; urgency=medium
 
