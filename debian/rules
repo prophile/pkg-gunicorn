@@ -1,7 +1,6 @@
 #!/usr/bin/make -f
 
-MANPAGES= $(patsubst %.pod,%.1, $(wildcard debian/manpages/*.pod))
-UPSTREAM_VERSION = $(shell dpkg-parsechangelog --show-field Version | cut -d- -f1)
+MANPAGES = $(patsubst %.pod,%.1, $(wildcard debian/manpages/*.pod))
 
 export PYBUILD_NAME = gunicorn
 
@@ -45,19 +44,7 @@ override_dh_installexamples:
 		debian/gunicorn-examples/usr/share/doc/gunicorn-examples/examples \
 		-executable -type f -print0 | xargs -0r chmod -x
 
-override_dh_installinit:
-	dh_installinit --name=gunicorn
-
 override_dh_installman:
-	mkdir -p debian/tmp
-	help2man -s 8 -o debian/tmp/gunicorn-debian.8 \
-		 --version-string $(UPSTREAM_VERSION) --no-info \
-		 -n "Control the Gunicorn daemons" \
-		 debian/gunicorn-debian
-	help2man -s 8 -o debian/tmp/gunicorn3-debian.8 \
-		 --version-string $(UPSTREAM_VERSION) --no-info \
-		 -n "Control the Gunicorn daemons" \
-		 debian/gunicorn3-debian
 	dh_installman
 	
 	# Rename the Python 3 versions.
