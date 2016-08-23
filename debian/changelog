@@ -1,4 +1,4 @@
-gunicorn (19.6.0-3) UNRELEASED; urgency=medium
+gunicorn (19.6.0-3) unstable; urgency=medium
 
   * Drop /usr/sbin/gunicorn{,3}-debian and related machinery (Closes: #835225)
     - Inflexibility.
@@ -8,7 +8,7 @@ gunicorn (19.6.0-3) UNRELEASED; urgency=medium
     - I doubt many people were really using this feature.
   * Add template .service files.
 
- -- Chris Lamb <lamby@debian.org>  Tue, 23 Aug 2016 18:23:09 +0100
+ -- Chris Lamb <lamby@debian.org>  Tue, 23 Aug 2016 19:26:20 +0100
 
 gunicorn (19.6.0-2) unstable; urgency=medium
 
