@@ -5,7 +5,7 @@ MANPAGES = $(patsubst %.pod,%.1, $(wildcard debian/manpages/*.pod))
 export PYBUILD_NAME = gunicorn
 
 %:
-	dh $@ --with=python2,python3,systemd --buildsystem=pybuild
+	dh $@ --with=python2,python3 --buildsystem=pybuild
 
 %.1: %.pod
 	pod2man $< $@

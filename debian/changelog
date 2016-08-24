@@ -1,3 +1,10 @@
+gunicorn (19.6.0-4) UNRELEASED; urgency=medium
+
+  * Drop template .service files; lets be as "upstream" as possible and point
+    towards examples and documentation instead.
+
+ -- Chris Lamb <lamby@debian.org>  Wed, 24 Aug 2016 09:09:22 +0100
+
 gunicorn (19.6.0-3) unstable; urgency=medium
 
   * Drop /usr/sbin/gunicorn{,3}-debian and related machinery (Closes: #835225)
