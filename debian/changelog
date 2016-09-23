@@ -1,3 +1,9 @@
+gunicorn (19.6.0-5) UNRELEASED; urgency=medium
+
+  * Run "gbp pq import && gbp pq export" to refresh patches.
+
+ -- Chris Lamb <lamby@debian.org>  Fri, 23 Sep 2016 22:27:22 +0200
+
 gunicorn (19.6.0-4) unstable; urgency=medium
 
   * Drop template .service files; lets be as "upstream" as possible and point
