@@ -1,11 +1,11 @@
-gunicorn (19.6.0-5) UNRELEASED; urgency=medium
+gunicorn (19.6.0-5) unstable; urgency=medium
 
   * Run "gbp pq import && gbp pq export" to refresh patches.
   * Don't call chown(2) if it would be a no-op so to avoid startup failures
     when confined in a snap. See
     <https://bugs.launchpad.net/ubuntu/+source/gunicorn/+bug/1611603>.
 
- -- Chris Lamb <lamby@debian.org>  Fri, 23 Sep 2016 22:27:22 +0200
+ -- Chris Lamb <lamby@debian.org>  Fri, 23 Sep 2016 22:35:47 +0200
 
 gunicorn (19.6.0-4) unstable; urgency=medium
 
