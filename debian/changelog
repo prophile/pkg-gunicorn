@@ -4,7 +4,7 @@ gunicorn (19.6.0-6) unstable; urgency=medium
     (Closes: #839183)
     - Also drop logrotate script now that we are not logging there.
 
- -- Chris Lamb <lamby@debian.org>  Fri, 30 Sep 2016 11:13:49 +0100
+ -- Chris Lamb <lamby@debian.org>  Fri, 30 Sep 2016 18:18:08 +0100
 
 gunicorn (19.6.0-5) unstable; urgency=medium
 
