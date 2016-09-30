@@ -1,0 +1,2 @@
+rm_conffile /etc/gunicorn.d/django.example 19.6.0-3 gunicorn-examples
+rm_conffile /etc/gunicorn.d/wsgi.example 19.6.0-3 gunicorn-examples

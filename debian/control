@@ -19,6 +19,7 @@ Homepage: http://gunicorn.org/
 
 Package: gunicorn
 Architecture: all
+Pre-Depends: dpkg-dev (>= 1.15.7.2)
 Depends:
  python-gunicorn (= ${binary:Version}),
  python-pkg-resources,
@@ -82,6 +83,7 @@ Description: Event-based HTTP/WSGI server (Python 3 version)
 
 Package: python-gunicorn
 Architecture: all
+Pre-Depends: dpkg-dev (>= 1.15.7.2)
 Depends:
  python-pkg-resources,
  python-setuptools,
@@ -136,6 +138,7 @@ Description: Event-based HTTP/WSGI server (Python 3 libraries)
 
 Package: gunicorn-examples
 Architecture: all
+Pre-Depends: dpkg-dev (>= 1.15.7.2)
 Depends:
  ${misc:Depends},
  ${python3:Depends},

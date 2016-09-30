@@ -1,0 +1,1 @@
+rm_conffile /etc/init.d/gunicorn 19.6.0-3 python-gunicorn

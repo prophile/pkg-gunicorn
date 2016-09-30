@@ -1,0 +1,4 @@
+rm_conffile /etc/init.d/gunicorn 19.6.0-3 gunicorn
+rm_conffile /etc/logrotate.d/gunicorn 19.6.0-3 gunicorn
+rm_conffile /etc/gunicorn.d/django.example 19.0-3 gunicorn
+rm_conffile /etc/gunicorn.d/wsgi.example 19.0-3 gunicorn
