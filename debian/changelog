@@ -3,6 +3,8 @@ gunicorn (19.6.0-7) UNRELEASED; urgency=medium
   * Set supplementary groups when changing uid Thanks to Filippos Giannakos
     <philipgian@grnet.gr>. (Closes: #762448)
   * Add example systemd service to gunicorn-examples. (Closes: #839250)
+  * Add README.Debian to make it clearer what to do now that /etc/gunicorn.d
+    has been removed.
 
  -- Chris Lamb <lamby@debian.org>  Thu, 06 Oct 2016 12:21:36 +0100
 
