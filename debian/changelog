@@ -1,4 +1,4 @@
-gunicorn (19.6.0-7) UNRELEASED; urgency=medium
+gunicorn (19.6.0-7) unstable; urgency=medium
 
   * Set supplementary groups when changing uid Thanks to Filippos Giannakos
     <philipgian@grnet.gr>. (Closes: #762448)
@@ -6,7 +6,7 @@ gunicorn (19.6.0-7) UNRELEASED; urgency=medium
   * Add README.Debian to make it clearer what to do now that /etc/gunicorn.d
     has been removed.
 
- -- Chris Lamb <lamby@debian.org>  Thu, 06 Oct 2016 12:21:36 +0100
+ -- Chris Lamb <lamby@debian.org>  Thu, 06 Oct 2016 19:52:41 +0100
 
 gunicorn (19.6.0-6) unstable; urgency=medium
 
