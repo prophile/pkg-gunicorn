@@ -1,3 +1,10 @@
+gunicorn (19.6.0-8) UNRELEASED; urgency=medium
+
+  * Correct 0004-Set-supplementary-groups-when-changing-uid.patch to be
+    compatible with Python 3. (Closes: #839984)
+
+ -- Chris Lamb <lamby@debian.org>  Fri, 07 Oct 2016 11:01:00 +0100
+
 gunicorn (19.6.0-7) unstable; urgency=medium
 
   * Set supplementary groups when changing uid Thanks to Filippos Giannakos
