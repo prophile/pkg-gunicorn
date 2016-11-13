@@ -1,3 +1,9 @@
+gunicorn (19.6.0-9) UNRELEASED; urgency=medium
+
+  * Add simple autopkgtest smoke test.
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 13 Nov 2016 10:38:07 +0000
+
 gunicorn (19.6.0-8) unstable; urgency=medium
 
   * Correct 0004-Set-supplementary-groups-when-changing-uid.patch to be
