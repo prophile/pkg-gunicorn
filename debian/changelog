@@ -1,3 +1,9 @@
+gunicorn (19.6.0-10) UNRELEASED; urgency=medium
+
+  * Move debian/README.Debian → debian/NEWS.
+
+ -- Chris Lamb <lamby@debian.org>  Sun, 01 Jan 2017 21:59:09 +0000
+
 gunicorn (19.6.0-9) unstable; urgency=medium
 
   * Add simple autopkgtest smoke test.
