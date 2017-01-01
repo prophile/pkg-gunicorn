@@ -1,8 +1,8 @@
-gunicorn (19.6.0-10) UNRELEASED; urgency=medium
+gunicorn (19.6.0-10) unstable; urgency=medium
 
   * Move debian/README.Debian → debian/NEWS.
 
- -- Chris Lamb <lamby@debian.org>  Sun, 01 Jan 2017 21:59:09 +0000
+ -- Chris Lamb <lamby@debian.org>  Sun, 01 Jan 2017 22:05:49 +0000
 
 gunicorn (19.6.0-9) unstable; urgency=medium
 
