@@ -3,7 +3,7 @@ gunicorn (19.6.0-11) unstable; urgency=medium
   * Use ${misc:Pre-Depends} to populate Pre-Depends for
     dpkg-maintscript-helper. Thanks to Sebastian Ramacher. (Closes: #853989)
 
- -- Chris Lamb <lamby@debian.org>  Fri, 03 Feb 2017 09:44:38 +1300
+ -- Chris Lamb <lamby@debian.org>  Fri, 03 Feb 2017 09:45:15 +1300
 
 gunicorn (19.6.0-10) unstable; urgency=medium
 
